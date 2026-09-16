@@ -4,6 +4,8 @@
 #include <fstream>
 #include <sstream>
 #include <algorithm>
+#include <iomanip>
+#include <conio.h> // Thu vien de dung _getch() an mat khau
 
 Menu::Menu() {
     movieMgr.loadFromFile();
@@ -12,12 +14,12 @@ Menu::Menu() {
 
 void Menu::run() {
     AccountManager accMgr;
-    accMgr.load(); // Tải danh sách tài khoản từ data/users.txt
+    accMgr.load(); // Tai danh sach tai khoan tu data/users.txt
 
     const Account* currentAccount = nullptr;
     int authChoice;
 
-    // --- MÀN HÌNH XÁC THỰC (ĐĂNG NHẬP / ĐĂNG KÝ) ---
+    // --- MAN HINH XAC THUC (DANG NHAP / DANG KY) ---
     do {
         cout << "\n================ HE THONG XEM PHIM ================" << endl;
         cout << "1. Dang nhap" << endl;
@@ -30,18 +32,35 @@ void Menu::run() {
         if (authChoice == 1) {
             string user, pass;
             cout << "Nhap username: "; cin >> user;
-            cout << "Nhap password: "; cin >> pass;
+            
+            // --- XU LY AN MAT KHAU BANG DAU * ---
+            cout << "Nhap password: ";
+            pass = "";
+            char ch;
+            while ((ch = _getch()) != '\r') {
+                if (ch == '\b') {
+                    if (pass.length() > 0) {
+                        pass.pop_back();
+                        cout << "\b \b";
+                    }
+                } else {
+                    pass += ch;
+                    cout << "*";
+                }
+            }
+            cout << endl;
+            // ------------------------------------
 
             currentAccount = accMgr.authenticate(user, pass);
             if (currentAccount != nullptr) {
                 if (!currentAccount->active) {
-                    cout << ">> Tai khoan cua bạn da bị khoa!" << endl;
+                    cout << ">> Tai khoan cua ban da bi khoa!" << endl;
                     currentAccount = nullptr;
                     system("pause");
                 } else {
-                    cout << ">> Dang nhap thanh công! Xin chao: " << currentAccount->fullName << endl;
+                    cout << ">> Dang nhap thanh cong! Xin chao: " << currentAccount->fullName << endl;
                     system("pause");
-                    break; // Thoát vòng lặp đăng nhập, đi tiếp vào hệ thống
+                    break; // Thoat vong lap dang nhap, di tiep vao he thong
                 }
             } else {
                 cout << ">> Sai username hoac password!" << endl;
@@ -58,9 +77,9 @@ void Menu::run() {
             cout << "Nhap so dien thoai: "; cin >> phone;
 
             if (accMgr.registerAccount(user, pass, name, phone, err)) {
-                cout << ">> Đang ký tai khoan thanh công! Ban co the đăng nhap ngay." << endl;
+                cout << ">> Dang ky tai khoan thanh cong! Ban co the dang nhap ngay." << endl;
             } else {
-                cout << ">> Đang ky that bai: " << err << endl;
+                cout << ">> Dang ky that bai: " << err << endl;
             }
             system("pause");
         } 
@@ -70,7 +89,7 @@ void Menu::run() {
         }
     } while (true);
 
-    // --- MENU CHÍNH SAU KHI ĐĂNG NHẬP ---
+    // --- MENU CHINH SAU KHI DANG NHAP ---
     int choice;
     Role userRole = AccountManager::getRole(*currentAccount);
 
@@ -80,13 +99,12 @@ void Menu::run() {
         cout << "----------------------------------------------------" << endl;
         
         if (userRole == Role::Customer) {
-            // KHÁCH HÀNG: Đưa thẳng vào các tùy chọn tìm kiếm & đặt vé luôn, không qua menu phụ nữa
             cout << "1. Dat ve ngay (Cac phim dang chieu)" << endl;
             cout << "2. Tim phim theo ten" << endl;
             cout << "3. Tim phim theo the loai" << endl;
+            cout << "4. Xem lich su dat ve cua toi" << endl;
             cout << "0. Dang xuat & Thoat" << endl;
         } else {
-            // ADMIN / STAFF: Giữ nguyên menu có quyền quản lý
             cout << "1. Menu Khach Hang (Dat ve)" << endl;
             cout << "2. Menu Quan Ly (Admin / Staff)" << endl;
             cout << "0. Dang xuat & Thoat" << endl;
@@ -96,7 +114,6 @@ void Menu::run() {
         cin >> choice;
 
         if (userRole == Role::Customer) {
-            // Xử lý trực tiếp cho Khách hàng
             if (choice == 1) {
                 vector<Movie> list = movieMgr.getMoviesByStatus("Dang chieu");
                 displayAndSelectMovie(list);
@@ -114,9 +131,14 @@ void Menu::run() {
                 getline(cin, keyword);
                 vector<Movie> list = movieMgr.searchMoviesByGenre(keyword);
                 displayAndSelectMovie(list);
+            } else if (choice == 4) {
+                string currentUsername;
+                cout << ">> [Bao Mat] Vui long xac nhan lai Username cua ban de tra cuu: ";
+                cin >> currentUsername;
+                showTicketHistory(currentUsername); 
+                system("pause");
             }
         } else {
-            // Xử lý cho Admin / Staff
             if (choice == 1) {
                 showCustomerMenu();
             } else if (choice == 2) {
@@ -142,6 +164,7 @@ void Menu::showCustomerMenu() {
         cout << "1. Dat ve ngay (Cac phim dang chieu)" << endl;
         cout << "2. Tim phim theo ten" << endl;
         cout << "3. Tim phim theo the loai" << endl;
+        cout << "4. Xem lich su dat ve cua toi" << endl;
         cout << "0. Quay lai" << endl;
         cout << "Moi chon: ";
         cin >> choice;
@@ -163,6 +186,13 @@ void Menu::showCustomerMenu() {
             getline(cin, keyword);
             vector<Movie> list = movieMgr.searchMoviesByGenre(keyword);
             displayAndSelectMovie(list);
+        }
+        else if (choice == 4) {
+            string currentUsername;
+            cout << ">> [Bao Mat] Vui long xac nhan lai Username cua ban de tra cuu: ";
+            cin >> currentUsername;
+            showTicketHistory(currentUsername); 
+            system("pause");
         }
     } while (choice != 0);
 }
@@ -218,7 +248,6 @@ void Menu::bookingFlow(Movie selectedMovie) {
         Showtime selectedST = listST[selectST - 1];
         CinemaRoom room(selectedST.getRoomId(), "Phong Chieu VIP");
         
-        // Đọc vé cũ từ file data/tickets.txt để đánh dấu [X]
         ifstream inFile("data/tickets.txt");
         if (inFile.is_open()) {
             string line;
@@ -303,6 +332,7 @@ void Menu::showAdminMenu() {
         cout << "\n--- MENU QUAN LY ---" << endl;
         cout << "1. Quan ly Phim (Them/Sua/Xoa)" << endl;
         cout << "2. Quan ly Suat chieu (Them suat chieu)" << endl;
+        cout << "3. Xem lich su dat ve (Toan he thong)" << endl; 
         cout << "0. Quay lai menu chinh" << endl;
         cout << "Moi chon: ";
         cin >> choice;
@@ -313,6 +343,7 @@ void Menu::showAdminMenu() {
             cout << "1. Them phim moi" << endl;
             cout << "2. Cap nhat trang thai phim" << endl;
             cout << "3. Xoa phim" << endl;
+            cout << "4. Xem danh sach phim" << endl;
             cout << "0. Quay lai" << endl;
             cout << "Moi chon: ";
             cin >> action;
@@ -320,19 +351,16 @@ void Menu::showAdminMenu() {
             if (action == 1) {
                 string id, title, genre;
                 int duration, ageLimit;
-                // --- TỰ ĐỘNG TẠO MÃ PHIM ---
                 vector<Movie> allMovies = movieMgr.getAll();
                 int maxMovieId = 0;
                 for (const auto& m : allMovies) {
                     string currentId = m.getMovieId();
                     if (currentId.length() >= 2 && currentId[0] == 'M') {
-                        int num = atoi(currentId.substr(1).c_str()); // Cắt chữ M, lấy số
+                        int num = atoi(currentId.substr(1).c_str());
                         if (num > maxMovieId) maxMovieId = num;
                     }
                 }
                 int nextId = maxMovieId + 1;
-                id = "M" + string(nextId < 10 ? "0" : "") + to_string(nextId);
-                // Định dạng ID: M01, M02... M10
                 id = "M" + string(nextId < 10 ? "0" : "") + to_string(nextId);
                 cout << "\n>> He thong tu dong cap Ma phim: " << id << endl;
                 cin.ignore(); 
@@ -379,7 +407,55 @@ void Menu::showAdminMenu() {
                 }
                 system("pause");
             }
-        } 
+            else if (action == 4) {
+                vector<Movie> allMovies = movieMgr.getAll();
+                if (allMovies.empty()) {
+                    cout << ">> Hien chua co phim nao trong he thong!" << endl;
+                    system("pause");
+                } else {
+                    int itemsPerPage = 10;
+                    int totalMovies = allMovies.size();
+                    int totalPages = (totalMovies + itemsPerPage - 1) / itemsPerPage;
+                    int currentPage = 1;
+                    char nav;
+                    
+                    do {
+                        cout << "\n============================== DANH SACH PHIM ==============================\n";
+                        cout << left << setw(10) << "Ma Phim"
+                             << setw(30) << "Ten Phim"
+                             << setw(15) << "The Loai"
+                             << setw(15) << "Thoi Luong"
+                             << setw(10) << "Do Tuoi"
+                             << setw(15) << "Trang Thai" << endl;
+                        cout << string(95, '-') << endl;
+                        
+                        int startIdx = (currentPage - 1) * itemsPerPage;
+                        int endIdx = startIdx + itemsPerPage;
+                        if (endIdx > totalMovies) endIdx = totalMovies;
+                        
+                        for (int i = startIdx; i < endIdx; i++) {
+                            cout << left << setw(10) << allMovies[i].getMovieId()
+                                 << setw(30) << allMovies[i].getTitle()
+                                 << setw(15) << allMovies[i].getGenre()
+                                 << setw(15) << to_string(allMovies[i].getDuration()) + " phut"
+                                 << setw(10) << allMovies[i].getAgeLimit()
+                                 << setw(15) << allMovies[i].getStatus() << endl;
+                        }
+                        cout << "============================================================================\n";
+                        
+                        cout << ">> Trang " << currentPage << "/" << totalPages << " | Nhap [N] de sang trang | [P] de quay lai | [0] Thoat: ";
+                        cin >> nav;
+                        
+                        if ((nav == 'N' || nav == 'n') && currentPage < totalPages) {
+                            currentPage++;
+                        } else if ((nav == 'P' || nav == 'p') && currentPage > 1) {
+                            currentPage--;
+                        }
+                    } while (nav != '0');
+                }
+            }
+        } // --- DAY LA DAU NGOAC DONG CUA phan (choice == 1) ---
+        
         else if (choice == 2) {
             string id, movieId, roomId, date, time;
             double price;
@@ -398,13 +474,12 @@ void Menu::showAdminMenu() {
             }
             cout << "---------------------------" << endl;
 
-            // --- TỰ ĐỘNG TẠO MÃ SUẤT CHIẾU ---
             vector<Showtime> allST = showtimeMgr.getAll();
             int maxSTId = 0;
             for (const auto& st : allST) {
                 string currentId = st.getShowtimeId();
                 if (currentId.length() >= 3 && currentId.substr(0, 2) == "ST") {
-                    int num = atoi(currentId.substr(2).c_str()); // Cắt chữ ST, lấy số
+                    int num = atoi(currentId.substr(2).c_str());
                     if (num > maxSTId) maxSTId = num;
                 }
             }
@@ -422,5 +497,35 @@ void Menu::showAdminMenu() {
             cout << ">> Them suat chieu thanh cong!" << endl;
             system("pause");
         }
+        else if (choice == 3) {
+            showTicketHistory(""); 
+            system("pause");
+        }
     } while (choice != 0);
+}
+
+// Khai bao ten ham chinh xac la thuoc ve class Menu
+void Menu::showTicketHistory(string username) {
+    ifstream file("data/tickets.txt");
+    if (!file.is_open()) {
+        cout << ">> Loi: Khong the mo file lich su dat ve!" << endl;
+        return;
+    }
+
+    string line;
+    bool found = false;
+    cout << "\n==================== LICH SU DAT VE ====================\n";
+    
+    while (getline(file, line)) {
+        if (username == "" || line.find(username) != string::npos) {
+            cout << line << endl;
+            found = true;
+        }
+    }
+    
+    if (!found) {
+        cout << ">> Chua co lich su dat ve nao!" << endl;
+    }
+    cout << "========================================================\n";
+    file.close();
 }
