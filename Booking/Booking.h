@@ -3,6 +3,7 @@
 #include "../Ticket/Ticket.h"
 #include <vector>
 #include <string>
+
 using namespace std;
 
 class Booking
@@ -10,9 +11,10 @@ class Booking
 private:
     string maBooking;
     string tenKhachHang;
+
     vector<Ticket*> danhSachVe;
 
-    // Lịch sử đặt vé
+    // Lich su dat ve
     static vector<Booking*> lichSuDatVe;
 
 public:
@@ -26,7 +28,6 @@ public:
 
     void xuatHoaDon();
 
-    // Hiển thị lịch sử đặt vé
     static void hienThiLichSu();
 
     ~Booking();

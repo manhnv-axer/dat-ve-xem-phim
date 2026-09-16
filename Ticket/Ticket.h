@@ -8,12 +8,28 @@ class Ticket
 {
 protected:
     string maVe;
+
+    // Thong tin ID
+    string movieID;
+    string bookingID;
+    string cinemaRoomID;
+    string seatID;
+    string showtimeID;
+
     string tenSuKien;
-    string soGhe;
     double giaCoBan;
 
 public:
-    Ticket(string ma, string ten, string ghe, double gia);
+    Ticket(
+        string ma,
+        string movie,
+        string booking,
+        string cinemaRoom,
+        string seat,
+        string showtime,
+        string ten,
+        double gia
+    );
 
     virtual ~Ticket();
 

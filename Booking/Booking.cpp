@@ -1,8 +1,9 @@
 #include "Booking.h"
 #include <iostream>
+
 using namespace std;
 
-// Khởi tạo danh sách lịch sử
+// Khoi tao lich su
 vector<Booking*> Booking::lichSuDatVe;
 
 Booking::Booking()
@@ -21,7 +22,7 @@ void Booking::nhapThongTin()
     cout << "Nhap ten khach hang: ";
     getline(cin, tenKhachHang);
 
-    // Thêm booking hiện tại vào lịch sử
+    // Them booking vao lich su
     lichSuDatVe.push_back(this);
 }
 
@@ -78,6 +79,7 @@ void Booking::hienThiLichSu()
     for (int i = 0; i < lichSuDatVe.size(); i++)
     {
         cout << "\nLan dat ve: " << i + 1 << endl;
+
         cout << "Ma booking: "
              << lichSuDatVe[i]->maBooking << endl;
 

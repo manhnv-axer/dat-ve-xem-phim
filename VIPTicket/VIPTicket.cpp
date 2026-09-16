@@ -2,11 +2,23 @@
 
 VIPTicket::VIPTicket(
     string ma,
+    string movie,
+    string booking,
+    string cinemaRoom,
+    string seat,
+    string showtime,
     string ten,
-    string ghe,
     double gia,
     double phuPhi)
-    : Ticket(ma, ten, ghe, gia)
+    : Ticket(
+        ma,
+        movie,
+        booking,
+        cinemaRoom,
+        seat,
+        showtime,
+        ten,
+        gia)
 {
     this->phuPhi = phuPhi;
 }

@@ -5,7 +5,16 @@
 class StandardTicket : public Ticket
 {
 public:
-    StandardTicket(string ma, string ten, string ghe, double gia);
+    StandardTicket(
+        string ma,
+        string movie,
+        string booking,
+        string cinemaRoom,
+        string seat,
+        string showtime,
+        string ten,
+        double gia
+    );
 
     double tinhGia() override;
 

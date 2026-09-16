@@ -10,10 +10,15 @@ private:
 public:
     VIPTicket(
         string ma,
+        string movie,
+        string booking,
+        string cinemaRoom,
+        string seat,
+        string showtime,
         string ten,
-        string ghe,
         double gia,
-        double phuPhi);
+        double phuPhi
+    );
 
     double tinhGia() override;
 
