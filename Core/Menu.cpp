@@ -816,6 +816,43 @@ void Menu::bookingHistory(const string& customerId) {
 }
 
 void Menu::cancelBooking(const string& customerId, bool managerOrStaff) {
+    if (!managerOrStaff) {
+        const vector<Booking> bookings = bookingManager.getCustomerBookings(customerId);
+        bool hasActiveBooking = false;
+
+        cout << "\n================ BOOKING CO THE HUY ================\n";
+        cout << left << setw(12) << "BOOKING"
+             << setw(12) << "SHOWTIME"
+             << setw(24) << "GHE"
+             << right << setw(15) << "TONG TIEN" << '\n';
+        cout << string(63, '-') << '\n';
+
+        for (const Booking& item : bookings) {
+            if (item.getStatus() == BookingStatus::Cancelled) {
+                continue;
+            }
+
+            hasActiveBooking = true;
+            string seats;
+            for (size_t index = 0; index < item.getTickets().size(); ++index) {
+                if (index > 0) seats += ", ";
+                seats += item.getTickets()[index]->getSeatId();
+            }
+            cout << left << setw(12) << item.getBookingId()
+                 << setw(12) << item.getShowtimeId()
+                 << setw(24) << seats.substr(0, 23)
+                 << right << setw(15) << fixed << setprecision(0)
+                 << item.getTotal() << " VND\n";
+        }
+
+        if (!hasActiveBooking) {
+            cout << "Khong co Booking nao co the huy.\n";
+            pause();
+            return;
+        }
+        cout << string(63, '-') << '\n';
+    }
+
     const string bookingId = InputHandler::getLine("Ma Booking: ");
     const Booking* booking = bookingManager.findById(bookingId);
     if (booking == nullptr) {
