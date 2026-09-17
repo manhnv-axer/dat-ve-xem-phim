@@ -113,6 +113,12 @@ void Menu::loginMenu() {
         if (choice == 2) {
             const string username = InputHandler::getLine("Username: ");
             const string password = InputHandler::getPassword("Password: ");
+            const string confirmPassword = InputHandler::getPassword("Nhap lai Password: ");
+            if (password != confirmPassword) {
+                cout << "Loi: Password nhap lai khong khop.\n";
+                pause();
+                continue;
+            }
             const string name = InputHandler::getLine("Ho ten: ");
             const string phone = InputHandler::getLine("So dien thoai: ");
             const string email = InputHandler::getLine("Email: ");
@@ -256,6 +262,12 @@ void Menu::staffAccountMenu() {
             string error;
             const string username = InputHandler::getLine("Username: ");
             const string password = InputHandler::getPassword("Password: ");
+            const string confirmPassword = InputHandler::getPassword("Nhap lai Password: ");
+            if (password != confirmPassword) {
+                cout << "Loi: Password nhap lai khong khop.\n";
+                pause();
+                continue;
+            }
             const string name = InputHandler::getLine("Ho ten: ");
             const string phone = InputHandler::getLine("SDT: ");
             const string email = InputHandler::getLine("Email: ");

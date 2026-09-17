@@ -1,0 +1,2 @@
+ID | TenDangNhap | MatKhau | VaiTro | HoTen | SoDienThoai | TrangThai
+U01 | admin | admin123 | Admin | Administrator | 0900000000 | Active
