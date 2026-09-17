@@ -1,5 +1,5 @@
-ID | TenDangNhap | MatKhau | VaiTro | HoTen | SoDienThoai | TrangThai
-U01 | admin | admin123 | Admin | Administrator | 0900000000 | Active
-S01 | staff01 | staff123 | Staff | Nguyen Van Staff | 0900000001 | Active
-C01 | customer01 | customer123 | Customer | Nguyen Van Customer | 0900000002 | Active
-C02 | customer02 | customer123 | Customer | Tran Thi Customer | 0900000003 | Active
+ID|Username|Password|Role|FullName|Phone|Email|Status
+U01|admin|admin123|Manager|Administrator|0900000000|admin@cinema.local|Active
+S01|staff01|staff123|Staff|Nguyen Van Staff|0900000001|staff@cinema.local|Active
+C01|customer01|customer123|Customer|Nguyen Van Customer|0900000002|customer01@cinema.local|Active
+C02|customer02|customer123|Customer|Tran Thi Customer|0900000003|customer02@cinema.local|Active

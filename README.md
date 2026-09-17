@@ -1,45 +1,37 @@
-"# quan-ly-thu-cung" 
+# He thong quan ly ban ve xem phim - C++ OOP
 
-Ở đây chỉ chứa file cài đặt và file cấu hình không chứ bất cứ thư viện nào của VS
+## Kien truc
+- `User` la lop co so tru tuong.
+- `Staff` ke thua `User`.
+- `Roles::Manager` ke thua `Staff`, tach rieng quyen Manager.
+- `Customer` ke thua `User`.
+- `Ticket` la lop co so tru tuong; `StandardTicket` va `VIPTicket` ke thua `Ticket`.
+- `vector<unique_ptr<Ticket>>` trong `Booking` the hien da hinh OOP.
+- `Manager<T>` la template dung chung cho cac manager; co `filter(Predicate)`.
 
-## 📌 Quy Định Làm Việc (Git Workflow)
+## Phan quyen
+- Manager: tao/khoa/mo khoa Staff; quan ly phim, showtime, phong/ghe, Customer, thong ke, ban ve tai quay.
+- Staff: ban ve tai quay, tra cuu, xem Booking; khong co API quan ly Staff.
+- Customer: tra cuu, dat nhieu ghe/Booking, xem lich su, huy Booking neu con >= 30 phut.
 
-Nhóm chúng ta thực hiện quy tắc **không push trực tiếp lên nhánh `main`**. Mọi thay đổi đều phải thông qua Pull Request (PR) và được phê duyệt (Approve).
+## Du lieu
+- `data/users.txt`
+- `data/movies.txt`
+- `data/showtimes.txt`
+- `data/rooms.txt`
+- `data/bookings.txt`
 
-### 1. Lấy code mới nhất trước khi làm việc
-Mỗi khi bắt đầu ngày mới hoặc trước khi viết tính năng mới, hãy đồng bộ code từ nhánh `main` về máy:
-```bash
-git checkout main
-git pull origin main
+`rooms.txt` luu rieng so dong, so cot va trang thai VIP/bao tri cua tung ghe. Trang thai da dat khong luu vao phong vi ghe da dat phu thuoc tung Showtime.
 
-### 2. Tạo nhánh làm việc riêng (Feature Branch)
-Không viết code trực tiếp trên main. Hãy tạo một nhánh mới mang tên bạn hoặc tên tính năng:
-```bash
-git checkout -b ten-nhanh-cua-ban
+## Gia ve
+- Standard = gia co ban.
+- VIP = `1.5 * gia co ban`.
 
-### 3. Lưu thay đổi và đẩy code lên GitHub (Push)
-Sau khi code xong và test ổn định trên máy:
-```bash
-# Kiểm tra trạng thái các file đã thay đổi
-git status
+## Tai khoan mau
+- Manager: `admin / admin123`
+- Staff: `staff01 / staff123`
+- Customer: `customer01 / customer123`
 
-# Thêm tất cả file vào hàng chờ (ngoại trừ các file trong .gitignore)
-git add .
-
-# Lưu lịch sử thay đổi kèm theo mô tả rõ ràng
-git commit -m "feat: mô tả chi tiết tính năng vừa làm"
-
-# Đẩy nhánh lên GitHub (chạy lệnh này cho lần push đầu tiên của nhánh)
-git push -u origin ten-nhanh-cua-ban
-
-# Từ các lần push sau, bạn chỉ cần gõ:
-git push
-### 4. Lưu thay đổi và đẩy code lên GitHub (Push)
-Tạo Pull Request (PR):
-    1. Truy cập vào trang GitHub của repository.
-
-    2. Nhấn nút Compare & pull request ở thông báo vừa hiển thị.
-
-    3. Điền tiêu đề và mô tả rõ ràng, sau đó bấm Create pull request.
-
-    4. Chờ quản lý vào kiểm tra code, bấm Approve và Merge để đưa code vào nhánh main.
+## Build
+Chay `build.bat`, sau do `run.bat`.
+Trong VS Code co the chay task `Build Cinema C++` hoac `Run Cinema C++`.

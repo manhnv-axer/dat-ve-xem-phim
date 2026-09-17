@@ -1,0 +1,10 @@
+M01|Avenger: End Game|Hanh dong|180|13|Dang chieu
+M02|Mat Biec|Tinh cam|120|16|Dang chieu
+M03|Fast and Furious 10|Hanh dong|140|13|Dang chieu
+M04|Doraemon|Hoat hinh|100|0|Dang chieu
+M05|Godzilla vs Kong|Vien tuong|130|13|Dang chieu
+M06|Lat Mat 6|Hanh dong|125|18|Dang chieu
+M07|Nha Ba Nu|Gia dinh|110|16|Dang chieu
+M08|The Conjuring|Kinh di|115|18|Dang chieu
+M09|Minions|Hoat hinh|90|0|Dang chieu
+M10|Bo Gia|Gia dinh|120|13|Dang chieu
