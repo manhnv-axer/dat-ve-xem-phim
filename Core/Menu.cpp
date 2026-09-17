@@ -495,14 +495,16 @@ void Menu::customerManagementMenu() {
         if (!error.empty()) cout << "Loi: " << error << '\n';
         else if (choice >= 3) cout << "Thuc hien thanh cong.\n";
 
-        cout << "\n---------------- DANH SACH CUSTOMER ----------------\n";
-        cout << left << setw(8) << "ID" << setw(18) << "USERNAME"
-             << setw(26) << "HO TEN" << setw(15) << "SDT" << "EMAIL\n";
-        cout << string(90, '-') << '\n';
-        for (const Account& customer : accountManager.getCustomers()) {
-            cout << left << setw(8) << customer.id << setw(18) << customer.username
-                 << setw(26) << customer.fullName.substr(0, 25)
-                 << setw(15) << customer.phone << customer.email << '\n';
+           if (choice >= 3) {
+              cout << "\n---------------- DANH SACH CUSTOMER ----------------\n";
+              cout << left << setw(8) << "ID" << setw(18) << "USERNAME"
+                  << setw(26) << "HO TEN" << setw(15) << "SDT" << "EMAIL\n";
+              cout << string(90, '-') << '\n';
+              for (const Account& customer : accountManager.getCustomers()) {
+                 cout << left << setw(8) << customer.id << setw(18) << customer.username
+                     << setw(26) << customer.fullName.substr(0, 25)
+                     << setw(15) << customer.phone << customer.email << '\n';
+              }
         }
         pause();
     }
