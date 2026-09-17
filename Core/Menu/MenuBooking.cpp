@@ -236,42 +236,154 @@ void Menu::bookingAtCounter(
     cout << "\n================ BAN VE TAI QUAY ================\n";
     cout << "Quy trinh: chon Customer -> chon phim -> chon suat chieu -> chon ghe.\n";
 
-    cout << "\n";
+    cout << "\n1. Chon Customer da co tai khoan\n";
+    cout << "2. Tao Customer moi\n";
+    cout << "0. Quay lai\n";
 
-    for (const Account& customer :
-         accountManager.getCustomers())
-    {
-        cout << customer.id
-             << " | "
-             << customer.username
-             << " | "
-             << customer.fullName
-             << " | "
-             << customer.phone
-             << '\n';
-    }
+    int customerChoice = input.getInt(
+        "Chon: ", 0, 2);
 
-    if (accountManager.getCustomers().empty())
-    {
-        cout << "Chua co Customer nao.\n";
-        pause();
+    if (customerChoice == 0)
         return;
-    }
 
-    string customerId = upper(
-        input.getLine("Nhap Customer ID: "));
+    string customerId;
 
-    const Account* customer =
-        accountManager.findById(customerId);
-
-    if (customer == nullptr ||
-        !AccountManager::isCustomer(*customer))
+    // =========================================================
+    // 1. Customer da co tai khoan
+    // =========================================================
+    if (customerChoice == 1)
     {
-        cout << "Customer khong ton tai.\n";
-        pause();
-        return;
+        vector<Account> customers =
+            accountManager.getCustomers();
+
+        cout << "\n================ DANH SACH CUSTOMER ================\n";
+
+        if (customers.empty())
+        {
+            cout << "Chua co Customer nao.\n";
+            cout << "Ban co muon tao Customer moi khong?\n";
+            cout << "1. Tao Customer moi\n";
+            cout << "0. Quay lai\n";
+
+            int choice = input.getInt(
+                "Chon: ", 0, 1);
+
+            if (choice == 0)
+                return;
+
+            customerChoice = 2;
+        }
+        else
+        {
+            for (const Account& customer : customers)
+            {
+                cout << customer.id
+                     << " | "
+                     << customer.username
+                     << " | "
+                     << customer.fullName
+                     << " | "
+                     << customer.phone
+                     << '\n';
+            }
+
+            customerId = upper(
+                input.getLine("Nhap Customer ID: "));
+
+            const Account* customer =
+                accountManager.findById(customerId);
+
+            if (customer == nullptr ||
+                !AccountManager::isCustomer(*customer))
+            {
+                cout << "Customer khong ton tai.\n";
+                pause();
+                return;
+            }
+        }
     }
 
+    // =========================================================
+    // 2. Tao Customer moi
+    // =========================================================
+    if (customerChoice == 2)
+    {
+        cout << "\n================ TAO CUSTOMER MOI ================\n";
+        cout << "Customer ID se duoc he thong tu dong tao.\n";
+
+        string username = input.getLine(
+            "Nhap Username: ");
+
+        string password = input.getPassword(
+            "Nhap Password: ");
+
+        string fullName = input.getLine(
+            "Nhap Ho ten: ");
+
+        string phone = input.getLine(
+            "Nhap So dien thoai: ");
+
+        string email = input.getLine(
+            "Nhap Email: ");
+
+        string errorMessage;
+
+        if (!accountManager.registerCustomer(
+                username,
+                password,
+                fullName,
+                phone,
+                email,
+                errorMessage))
+        {
+            cout << "\nTao Customer that bai: "
+                 << errorMessage << '\n';
+            pause();
+            return;
+        }
+
+        // Tim Customer vua tao bang username.
+        vector<Account> customers =
+            accountManager.searchCustomers(username);
+
+        const Account* createdCustomer = nullptr;
+
+        for (const Account& customer : customers)
+        {
+            if (customer.username == username)
+            {
+                createdCustomer =
+                    accountManager.findById(customer.id);
+                break;
+            }
+        }
+
+        if (createdCustomer == nullptr)
+        {
+            cout << "Khong tim thay Customer vua tao.\n";
+            pause();
+            return;
+        }
+
+        customerId = createdCustomer->id;
+
+        cout << "\nTao Customer thanh cong!\n";
+        cout << "Customer ID: "
+             << createdCustomer->id << '\n';
+        cout << "Username: "
+             << createdCustomer->username << '\n';
+        cout << "Ho ten: "
+             << createdCustomer->fullName << '\n';
+        cout << "So dien thoai: "
+             << createdCustomer->phone << '\n';
+
+        cout << "\nNhan Enter de tiep tuc...";
+        cin.get();
+    }
+
+    // =========================================================
+    // 3. Chon phim
+    // =========================================================
     int movieIndex = chooseMovieForBooking();
 
     if (movieIndex < 0)
@@ -280,6 +392,9 @@ void Menu::bookingAtCounter(
     vector<Movie> movies =
         movieManager.getByStatus("Dang chieu");
 
+    if (movieIndex >= static_cast<int>(movies.size()))
+        return;
+
     const Movie& selectedMovie =
         movies[movieIndex];
 
@@ -287,6 +402,9 @@ void Menu::bookingAtCounter(
          << selectedMovie.getTitle()
          << " <<\n";
 
+    // =========================================================
+    // 4. Chon suat chieu
+    // =========================================================
     int showtimeIndex =
         chooseShowtimeForMovie(
             selectedMovie.getMovieId());
@@ -304,6 +422,9 @@ void Menu::bookingAtCounter(
             available.push_back(showtime);
     }
 
+    if (showtimeIndex >= static_cast<int>(available.size()))
+        return;
+
     const Showtime& showtime =
         available[showtimeIndex];
 
@@ -317,7 +438,13 @@ void Menu::bookingAtCounter(
         return;
     }
 
+    // =========================================================
+    // 5. Chon ghe
+    // =========================================================
     input.clearScreen();
+
+    cout << ">> Customer: "
+         << customerId << '\n';
 
     cout << ">> Ban da chon Suat: "
          << showtime.getStartTime()
@@ -353,6 +480,9 @@ void Menu::bookingAtCounter(
             request.seatIds.push_back(seat);
     }
 
+    // =========================================================
+    // 6. Tao Booking
+    // =========================================================
     string bookingId;
     string error;
 

@@ -6,3 +6,4 @@ C02|customer02|customer123|Customer|Tran Thi Customer|0900000003|customer02@cine
 C3|tantruc|1q2w3e4r5t|Customer|Tan Truc|0912345678|truc@gmail.com|Active
 C4|tanne|1q2w3e4r5t|Customer|Trn tr|0912345678|tn@gmail.com|Active
 C5|1q2w|1q2w3e4r5t|Customer|1q2w|0912345678|truc@trucgmail.com|Active
+C6|nguyenvanmoi|123456|Customer|Nguyen Van Moi|0823112334|moinv@gmail.com|Active
