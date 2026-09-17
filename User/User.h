@@ -4,8 +4,6 @@
 
 using namespace std;
 
-// Lop User la lop co so truu tuong vi co phuong thuc ao thuan tuy.
-// Day la abstract class thu nhat cua he thong.
 class User {
 protected:
     string id;
