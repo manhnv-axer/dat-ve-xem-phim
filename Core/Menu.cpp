@@ -2,6 +2,8 @@
 #include "InputHandler.h"
 
 #include <algorithm>
+#include <cstdio>
+#include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <sstream>
@@ -92,7 +94,53 @@ void Menu::printRooms() const {
 }
 
 void Menu::run() {
+    const Account* savedAccount = loadSession();
+    if (savedAccount != nullptr && savedAccount->active) {
+        openAccountMenu(*savedAccount);
+        clearSession();
+    } else {
+        clearSession();
+    }
     loginMenu();
+}
+
+void Menu::openAccountMenu(const Account& account) {
+    cout << "Dang nhap tu dong: " << account.fullName
+         << " (" << roleText(AccountManager::getRole(account)) << ")\n";
+
+    if (AccountManager::isManager(account)) {
+        managerMenu(account);
+    } else if (AccountManager::isStaff(account)) {
+        staffMenu(account);
+    } else {
+        customerMenu(account);
+    }
+}
+
+const Account* Menu::loadSession() const {
+    ifstream input("data/session.txt");
+    string accountId;
+    if (!input || !getline(input, accountId)) {
+        return nullptr;
+    }
+
+    if (!accountId.empty() && accountId.back() == '\r') {
+        accountId.pop_back();
+    }
+    return accountManager.findById(accountId);
+}
+
+bool Menu::saveSession(const Account& account) const {
+    ofstream output("data/session.txt");
+    if (!output) {
+        return false;
+    }
+    output << account.id << '\n';
+    return true;
+}
+
+void Menu::clearSession() const {
+    remove("data/session.txt");
 }
 
 void Menu::loginMenu() {
@@ -190,13 +238,9 @@ void Menu::loginMenu() {
         cout << "Dang nhap thanh cong: " << account->fullName
              << " (" << roleText(AccountManager::getRole(*account)) << ")\n";
 
-        if (AccountManager::isManager(*account)) {
-            managerMenu(*account);
-        } else if (AccountManager::isStaff(*account)) {
-            staffMenu(*account);
-        } else {
-            customerMenu(*account);
-        }
+        saveSession(*account);
+        openAccountMenu(*account);
+        clearSession();
     }
 }
 

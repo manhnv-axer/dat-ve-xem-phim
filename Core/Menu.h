@@ -21,6 +21,10 @@ private:
     BookingManager bookingManager;
 
     void loginMenu();
+    void openAccountMenu(const Account& account);
+    const Account* loadSession() const;
+    bool saveSession(const Account& account) const;
+    void clearSession() const;
     void customerMenu(const Account& account);
     void staffMenu(const Account& account);
     void managerMenu(const Account& account);
