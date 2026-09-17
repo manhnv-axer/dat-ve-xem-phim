@@ -1,0 +1,2 @@
+BookingId|CustomerId|ShowtimeId|StaffId|Status|CreatedAt|Tickets|Total
+B0001|C3|ST19||CANCELLED|2026-09-17 08:58:05|B0001-T01,E5,VIP,80000|120000

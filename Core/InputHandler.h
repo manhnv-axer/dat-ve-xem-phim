@@ -58,8 +58,9 @@ public:
 
     static string getPassword(const string& prompt) {
 #ifdef _WIN32
-        cout << prompt;
+        cout << prompt << "[F2: hien/an] ";
         string password;
+        bool visible = false;
         while (true) {
             int key = _getch();
             if (key == 13) {
@@ -74,12 +75,19 @@ public:
                 continue;
             }
             if (key == 0 || key == 224) {
-                _getch();
+                const int functionKey = _getch();
+                if (functionKey == 60) {
+                    for (size_t index = 0; index < password.size(); ++index) {
+                        cout << "\b \b";
+                    }
+                    visible = !visible;
+                    cout << (visible ? password : string(password.size(), '*'));
+                }
                 continue;
             }
             if (key >= 32 && key <= 126) {
                 password.push_back(static_cast<char>(key));
-                cout << '*';
+                cout << (visible ? static_cast<char>(key) : '*');
             }
         }
         return password;

@@ -45,6 +45,11 @@ public:
     static bool isManager(const Account& account);
     static bool isStaff(const Account& account);
     static bool isCustomer(const Account& account);
+    static bool validUsername(const string& value);
+    static bool validPassword(const string& value);
+    static bool validPhone(const string& value);
+    static bool validEmail(const string& value);
+    bool usernameExists(const string& username) const;
 
     const Account* authenticate(const string& username, const string& password) const;
 

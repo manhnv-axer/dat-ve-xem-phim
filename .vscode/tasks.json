@@ -4,7 +4,7 @@
         {
             "type": "cppbuild",
             "label": "C/C++: g++.exe build Cinema",
-            "command": "C:\\\\msys64\\\\ucrt64\\\\bin\\\\g++.exe",
+            "command": "C:\\mingw64\\bin\\g++.exe",
             "args": [
                 "-std=c++17",
                 "-fdiagnostics-color=always",

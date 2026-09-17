@@ -111,34 +111,80 @@ void Menu::loginMenu() {
         }
 
         if (choice == 2) {
-            const string username = InputHandler::getLine("Username: ");
-            const string password = InputHandler::getPassword("Password: ");
+            string username;
+            do {
+                username = InputHandler::getLine("Username: ");
+                if (!AccountManager::validUsername(username)) {
+                    cout << "Loi: Username phai dai 3-20 ky tu, chi gom chu, so va dau _.\n";
+                } else if (accountManager.usernameExists(username)) {
+                    cout << "Loi: Username da ton tai. Vui long chon username khac.\n";
+                }
+            } while (!AccountManager::validUsername(username) ||
+                     accountManager.usernameExists(username));
+
+            string password;
+            do {
+                password = InputHandler::getPassword("Password: ");
+                if (!AccountManager::validPassword(password)) {
+                    cout << "Loi: Password phai co it nhat 6 ky tu.\n";
+                }
+            } while (!AccountManager::validPassword(password));
+
+            string confirmPassword;
+            do {
+                confirmPassword = InputHandler::getPassword("Nhap lai Password: ");
+                if (password != confirmPassword) {
+                    cout << "Loi: Password nhap lai khong khop.\n";
+                }
+            } while (password != confirmPassword);
+
             const string name = InputHandler::getLine("Ho ten: ");
-            const string phone = InputHandler::getLine("So dien thoai: ");
-            const string email = InputHandler::getLine("Email: ");
+            string phone;
+            do {
+                phone = InputHandler::getLine("So dien thoai: ");
+                if (!AccountManager::validPhone(phone)) {
+                    cout << "Loi: So dien thoai phai gom 10 hoac 11 chu so va bat dau bang 0.\n";
+                }
+            } while (!AccountManager::validPhone(phone));
+
+            string email;
+            do {
+                email = InputHandler::getLine("Email: ");
+                if (!AccountManager::validEmail(email)) {
+                    cout << "Loi: Email khong dung dinh dang.\n";
+                }
+            } while (!AccountManager::validEmail(email));
             string error;
             if (accountManager.registerCustomer(username, password, name, phone, email, error)) {
-                cout << "Dang ky Customer thanh cong.\n";
+                cout << "Dang ky Customer thanh cong. Vui long dang nhap.\n";
+                pause();
             } else {
                 cout << "Loi: " << error << '\n';
+                pause();
             }
-            pause();
             continue;
         }
 
-        const string username = InputHandler::getLine("Username: ");
-        const string password = InputHandler::getPassword("Password: ");
-        const Account* account = accountManager.authenticate(username, password);
+        const Account* account = nullptr;
+        while (account == nullptr) {
+            const string username = InputHandler::getLine("Username: ");
+            if (!AccountManager::validUsername(username)) {
+                cout << "Loi: Username khong duoc de trong, dai 3-20 ky tu, chi gom chu, so va dau _.\n";
+                continue;
+            }
+            if (!accountManager.usernameExists(username)) {
+                cout << "Loi: Username khong ton tai trong he thong. Vui long nhap lai.\n";
+                continue;
+            }
+            const string password = InputHandler::getPassword("Password: ");
+            account = accountManager.authenticate(username, password);
 
-        if (account == nullptr) {
-            cout << "Sai username/password.\n";
-            pause();
-            continue;
-        }
-        if (!account->active) {
-            cout << "Tai khoan dang bi khoa.\n";
-            pause();
-            continue;
+            if (account == nullptr) {
+                cout << "Sai username/password. Vui long nhap lai.\n";
+            } else if (!account->active) {
+                cout << "Tai khoan dang bi khoa. Vui long nhap lai.\n";
+                account = nullptr;
+            }
         }
 
         cout << "Dang nhap thanh cong: " << account->fullName
@@ -254,11 +300,49 @@ void Menu::staffAccountMenu() {
 
         if (choice == 1) {
             string error;
-            const string username = InputHandler::getLine("Username: ");
-            const string password = InputHandler::getPassword("Password: ");
+            string username;
+            do {
+                username = InputHandler::getLine("Username: ");
+                if (!AccountManager::validUsername(username)) {
+                    cout << "Loi: Username phai dai 3-20 ky tu, chi gom chu, so va dau _.\n";
+                } else if (accountManager.usernameExists(username)) {
+                    cout << "Loi: Username da ton tai. Vui long chon username khac.\n";
+                }
+            } while (!AccountManager::validUsername(username) ||
+                     accountManager.usernameExists(username));
+
+            string password;
+            do {
+                password = InputHandler::getPassword("Password: ");
+                if (!AccountManager::validPassword(password)) {
+                    cout << "Loi: Password phai co it nhat 6 ky tu.\n";
+                }
+            } while (!AccountManager::validPassword(password));
+
+            string confirmPassword;
+            do {
+                confirmPassword = InputHandler::getPassword("Nhap lai Password: ");
+                if (password != confirmPassword) {
+                    cout << "Loi: Password nhap lai khong khop.\n";
+                }
+            } while (password != confirmPassword);
+
             const string name = InputHandler::getLine("Ho ten: ");
-            const string phone = InputHandler::getLine("SDT: ");
-            const string email = InputHandler::getLine("Email: ");
+            string phone;
+            do {
+                phone = InputHandler::getLine("SDT: ");
+                if (!AccountManager::validPhone(phone)) {
+                    cout << "Loi: So dien thoai phai gom 10 hoac 11 chu so va bat dau bang 0.\n";
+                }
+            } while (!AccountManager::validPhone(phone));
+
+            string email;
+            do {
+                email = InputHandler::getLine("Email: ");
+                if (!AccountManager::validEmail(email)) {
+                    cout << "Loi: Email khong dung dinh dang.\n";
+                }
+            } while (!AccountManager::validEmail(email));
             if (accountManager.createStaff(username, password, name, phone, email, error)) {
                 cout << "Tao Staff thanh cong.\n";
             } else {
@@ -483,14 +567,16 @@ void Menu::customerManagementMenu() {
         if (!error.empty()) cout << "Loi: " << error << '\n';
         else if (choice >= 3) cout << "Thuc hien thanh cong.\n";
 
-        cout << "\n---------------- DANH SACH CUSTOMER ----------------\n";
-        cout << left << setw(8) << "ID" << setw(18) << "USERNAME"
-             << setw(26) << "HO TEN" << setw(15) << "SDT" << "EMAIL\n";
-        cout << string(90, '-') << '\n';
-        for (const Account& customer : accountManager.getCustomers()) {
-            cout << left << setw(8) << customer.id << setw(18) << customer.username
-                 << setw(26) << customer.fullName.substr(0, 25)
-                 << setw(15) << customer.phone << customer.email << '\n';
+           if (choice >= 3) {
+              cout << "\n---------------- DANH SACH CUSTOMER ----------------\n";
+              cout << left << setw(8) << "ID" << setw(18) << "USERNAME"
+                  << setw(26) << "HO TEN" << setw(15) << "SDT" << "EMAIL\n";
+              cout << string(90, '-') << '\n';
+              for (const Account& customer : accountManager.getCustomers()) {
+                 cout << left << setw(8) << customer.id << setw(18) << customer.username
+                     << setw(26) << customer.fullName.substr(0, 25)
+                     << setw(15) << customer.phone << customer.email << '\n';
+              }
         }
         pause();
     }
@@ -670,7 +756,29 @@ string trimSeatInput(string value) {
 
 void Menu::bookingAtCounter(const Account& operatorAccount) {
     InputHandler::clearScreen();
-    const string customerId = InputHandler::getLine("Customer ID: ");
+
+    cout << "\n================ BAN VE TAI QUAY ================\n";
+    cout << "Quy trinh: chon Customer -> chon phim -> chon suat chieu -> chon ghe.\n";
+    cout << "Nhap Customer ID tu danh sach ben duoi.\n\n";
+    cout << left << setw(12) << "CUSTOMER ID"
+         << setw(20) << "USERNAME"
+         << setw(28) << "HO TEN"
+         << setw(16) << "SDT" << "EMAIL\n";
+    cout << string(90, '-') << '\n';
+    for (const Account& customer : accountManager.getCustomers()) {
+        cout << left << setw(12) << customer.id
+             << setw(20) << customer.username
+             << setw(28) << customer.fullName.substr(0, 27)
+             << setw(16) << customer.phone << customer.email << '\n';
+    }
+    if (accountManager.getCustomers().empty()) {
+        cout << "Chua co Customer nao.\n";
+        pause();
+        return;
+    }
+    cout << string(90, '-') << '\n';
+
+    const string customerId = upper(InputHandler::getLine("Nhap Customer ID: "));
     const Account* customer = accountManager.findById(customerId);
     if (customer == nullptr || !AccountManager::isCustomer(*customer)) {
         cout << "Customer khong ton tai.\n";
@@ -804,6 +912,43 @@ void Menu::bookingHistory(const string& customerId) {
 }
 
 void Menu::cancelBooking(const string& customerId, bool managerOrStaff) {
+    if (!managerOrStaff) {
+        const vector<Booking> bookings = bookingManager.getCustomerBookings(customerId);
+        bool hasActiveBooking = false;
+
+        cout << "\n================ BOOKING CO THE HUY ================\n";
+        cout << left << setw(12) << "BOOKING"
+             << setw(12) << "SHOWTIME"
+             << setw(24) << "GHE"
+             << right << setw(15) << "TONG TIEN" << '\n';
+        cout << string(63, '-') << '\n';
+
+        for (const Booking& item : bookings) {
+            if (item.getStatus() == BookingStatus::Cancelled) {
+                continue;
+            }
+
+            hasActiveBooking = true;
+            string seats;
+            for (size_t index = 0; index < item.getTickets().size(); ++index) {
+                if (index > 0) seats += ", ";
+                seats += item.getTickets()[index]->getSeatId();
+            }
+            cout << left << setw(12) << item.getBookingId()
+                 << setw(12) << item.getShowtimeId()
+                 << setw(24) << seats.substr(0, 23)
+                 << right << setw(15) << fixed << setprecision(0)
+                 << item.getTotal() << " VND\n";
+        }
+
+        if (!hasActiveBooking) {
+            cout << "Khong co Booking nao co the huy.\n";
+            pause();
+            return;
+        }
+        cout << string(63, '-') << '\n';
+    }
+
     const string bookingId = InputHandler::getLine("Ma Booking: ");
     const Booking* booking = bookingManager.findById(bookingId);
     if (booking == nullptr) {
