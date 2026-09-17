@@ -9,7 +9,7 @@ void Menu::loginMenu()
         input.clearScreen();
 
         cout << "\n====================================================\n";
-        cout << "           HE THONG QUAN LY BAN VE CINEMA\n";
+        cout << "           HE THONG QUAN LY BAN VE XEM PHIM\n";
         cout << "====================================================\n";
         cout << "1. Dang nhap\n";
         cout << "2. Dang ky Customer\n";
