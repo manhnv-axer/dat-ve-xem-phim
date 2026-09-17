@@ -1,62 +1,124 @@
 #include "CinemaRoom.h"
-#include <iostream>
-#include <iomanip> // Thư viện để căn lề setw()
 
-CinemaRoom::CinemaRoom(string id, string name) : roomId(id), roomName(name) {
-    char rows[] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'}; // 8 hàng
-    for (int i = 0; i < 8; i++) {
-        for (int j = 1; j <= 12; j++) { // 12 cột
-            string seatId = string(1, rows[i]) + to_string(j); // Gộp chữ và số (VD: A1)
-            
-            // Thiết lập dải ghế VIP nằm ở hàng D, E, F (từ cột 3 đến 10)
-            bool isVip = (i >= 3 && i <= 5 && j >= 3 && j <= 10);
-            
-            seats.push_back(Seat(seatId, isVip, false));
+#include <algorithm>
+#include <cctype>
+#include <iomanip>
+#include <iostream>
+
+using namespace std;
+
+CinemaRoom::CinemaRoom(const string& id, const string& name, int rows, int cols)
+    : roomId(id), roomName(name), rowCount(max(1, rows)), colCount(max(1, cols)) {
+    buildSeats();
+}
+
+void CinemaRoom::buildSeats() {
+    seats.clear();
+    for (int row = 0; row < rowCount; ++row) {
+        char rowName = static_cast<char>('A' + row);
+        for (int col = 0; col < colCount; ++col) {
+            seats.emplace_back(string(1, rowName) + to_string(col), false, false);
         }
     }
 }
 
 string CinemaRoom::getRoomId() const { return roomId; }
 string CinemaRoom::getRoomName() const { return roomName; }
+int CinemaRoom::getRowCount() const { return rowCount; }
+int CinemaRoom::getColCount() const { return colCount; }
+const vector<Seat>& CinemaRoom::getSeats() const { return seats; }
 vector<Seat>& CinemaRoom::getSeats() { return seats; }
 
-Seat* CinemaRoom::getSeatById(string seatId) {
-    for (auto& seat : seats) {
-        if (seat.getSeatId() == seatId) return &seat;
+Seat* CinemaRoom::getSeatById(const string& seatId) {
+    for (Seat& seat : seats) {
+        if (seat.getSeatId() == seatId) {
+            return &seat;
+        }
     }
     return nullptr;
 }
 
-void CinemaRoom::displayRoomMap() const {
-    cout << "\n=======================================================" << endl;
-    cout << "                [[ MAN HINH CHIEU ]]                   " << endl;
-    cout << "=======================================================\n" << endl;
-    
-    // In thanh ngang số cột (1 đến 12) căn đều khoảng trắng
-    cout << "      ";
-    for (int j = 1; j <= 12; j++) {
-        cout << setw(3) << j << " ";
-    }
-    cout << endl;
-
-    int index = 0;
-    char rows[] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'};
-    for (int i = 0; i < 8; i++) {
-        cout << " " << rows[i] << "  "; // In tên hàng và khoảng cách cố định
-        for (int j = 1; j <= 12; j++) {
-            if (seats[index].getIsBooked()) {
-                cout << "[X] ";
-            } else if (seats[index].getIsVIP()) {
-                cout << "[V] ";
-            } else {
-                cout << "[ ] ";
-            }
-            index++;
+const Seat* CinemaRoom::getSeatById(const string& seatId) const {
+    for (const Seat& seat : seats) {
+        if (seat.getSeatId() == seatId) {
+            return &seat;
         }
-        cout << endl;
     }
-    
-    cout << "\n-------------------------------------------------------" << endl;
-    cout << "  Chu thich: [ ] Trong (Thuong) | [V] VIP | [X] Da Dat   " << endl;
-    cout << "-------------------------------------------------------" << endl;
+    return nullptr;
+}
+
+void CinemaRoom::setName(const string& value) { roomName = value; }
+
+void CinemaRoom::setDimensions(int rows, int cols) {
+    if (rows < 1 || cols < 1) {
+        return;
+    }
+
+    vector<Seat> oldSeats = seats;
+    const int oldRows = rowCount;
+    const int oldCols = colCount;
+
+    rowCount = rows;
+    colCount = cols;
+    buildSeats();
+
+    // Khi thay doi kich thuoc, giu lai VIP/Bao tri cua cac ghe van con ton tai.
+    for (int row = 0; row < min(oldRows, rowCount); ++row) {
+        for (int col = 0; col < min(oldCols, colCount); ++col) {
+            const size_t oldIndex = static_cast<size_t>(row * oldCols + col);
+            const size_t newIndex = static_cast<size_t>(row * colCount + col);
+            seats[newIndex].setVIP(oldSeats[oldIndex].isVIP());
+            seats[newIndex].setMaintenance(oldSeats[oldIndex].isMaintenance());
+        }
+    }
+}
+
+void CinemaRoom::setVIP(const string& seatId, bool value) {
+    Seat* seat = getSeatById(seatId);
+    if (seat != nullptr) {
+        seat->setVIP(value);
+    }
+}
+
+void CinemaRoom::setMaintenance(const string& seatId, bool value) {
+    Seat* seat = getSeatById(seatId);
+    if (seat != nullptr) {
+        seat->setMaintenance(value);
+    }
+}
+
+void CinemaRoom::displaySeatLayout(const vector<string>& bookedSeats) const {
+    cout << "\nPhong " << roomId << " - " << roomName
+         << " (" << rowCount << " x " << colCount << ")\n";
+    cout << "                  MAN HINH\n\n";
+
+    cout << "     ";
+    for (int col = 0; col < colCount; ++col) {
+        cout << setw(4) << col;
+    }
+    cout << '\n';
+
+    auto isBooked = [&](const string& id) {
+        return find(bookedSeats.begin(), bookedSeats.end(), id) != bookedSeats.end();
+    };
+
+    for (int row = 0; row < rowCount; ++row) {
+        char rowName = static_cast<char>('A' + row);
+        cout << ' ' << rowName << "   ";
+        for (int col = 0; col < colCount; ++col) {
+            const Seat& seat = seats[row * colCount + col];
+            string symbol = "[ ]";
+            if (seat.isMaintenance()) {
+                symbol = "[M]";
+            } else if (isBooked(seat.getSeatId())) {
+                symbol = "[X]";
+            } else if (seat.isVIP()) {
+                symbol = "[V]";
+            }
+            cout << setw(4) << symbol;
+        }
+        cout << '\n';
+    }
+
+    cout << "\n[ ] Trong | [V] VIP | [X] Da dat | [M] Bao tri\n";
 }

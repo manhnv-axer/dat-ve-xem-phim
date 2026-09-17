@@ -1,531 +1,866 @@
 #include "Menu.h"
-#include "../Room/CinemaRoom.h"
-#include "../AccountManager/AccountManager.h"
-#include <fstream>
-#include <sstream>
+#include "InputHandler.h"
+
 #include <algorithm>
 #include <iomanip>
-#include <conio.h> // Thu vien de dung _getch() an mat khau
+#include <iostream>
+#include <sstream>
 
-Menu::Menu() {
-    movieMgr.loadFromFile();
-    showtimeMgr.loadFromFile();
+using namespace std;
+
+namespace {
+string roleText(Role role) {
+    if (role == Role::Manager) return "Manager";
+    if (role == Role::Staff) return "Staff";
+    return "Customer";
+}
+
+string upper(string value) {
+    transform(value.begin(), value.end(), value.begin(),
+              [](unsigned char c) { return static_cast<char>(toupper(c)); });
+    return value;
+}
+}
+
+void Menu::pause() const {
+    cout << "\nNhan Enter de tiep tuc...";
+    string ignored;
+    getline(cin, ignored);
+}
+
+void Menu::printMovies(const vector<Movie>& movies) const {
+    cout << "\n================ DANH SACH PHIM ================\n";
+    cout << left << setw(8) << "ID"
+         << setw(28) << "TEN PHIM"
+         << setw(20) << "THE LOAI"
+         << right << setw(10) << "PHUT"
+         << setw(8) << "TUOI"
+         << "  " << left << setw(16) << "TRANG THAI" << '\n';
+    cout << string(96, '-') << '\n';
+
+    for (const Movie& movie : movies) {
+        cout << left << setw(8) << movie.getMovieId()
+             << setw(28) << movie.getTitle().substr(0, 27)
+             << setw(20) << movie.getGenre().substr(0, 19)
+             << right << setw(10) << movie.getDuration()
+             << setw(8) << movie.getAgeLimit()
+             << "  " << left << setw(16) << movie.getStatus().substr(0, 15) << '\n';
+    }
+    if (movies.empty()) cout << "Khong co du lieu.\n";
+    cout << right;
+}
+
+void Menu::printShowtimes(const vector<Showtime>& showtimes) const {
+    cout << "\n================ DANH SACH SHOWTIME ================\n";
+    cout << left << setw(10) << "ID"
+         << setw(10) << "PHIM"
+         << setw(12) << "PHONG"
+         << setw(14) << "NGAY"
+         << setw(10) << "GIO"
+         << setw(16) << "GIA"
+         << "TRANG THAI\n";
+    cout << string(82, '-') << '\n';
+
+    for (const Showtime& showtime : showtimes) {
+        cout << left << setw(10) << showtime.getShowtimeId()
+             << setw(10) << showtime.getMovieId()
+             << setw(12) << showtime.getRoomId()
+             << setw(14) << showtime.getShowDate()
+             << setw(10) << showtime.getStartTime()
+             << setw(16) << fixed << setprecision(0) << showtime.getBasePrice()
+             << showtime.getStatus() << '\n';
+    }
+    if (showtimes.empty()) cout << "Khong co du lieu.\n";
+}
+
+void Menu::printRooms() const {
+    cout << "\n================ DANH SACH PHONG ================\n";
+    cout << left << setw(10) << "ID"
+         << setw(28) << "TEN PHONG"
+         << setw(10) << "DONG"
+         << setw(10) << "COT"
+         << "SO GHE\n";
+    cout << string(70, '-') << '\n';
+    for (const CinemaRoom& room : roomManager.getItems()) {
+        cout << left << setw(10) << room.getRoomId()
+             << setw(28) << room.getRoomName().substr(0, 27)
+             << setw(10) << room.getRowCount()
+             << setw(10) << room.getColCount()
+             << room.getSeats().size() << '\n';
+    }
+    if (roomManager.getItems().empty()) cout << "Khong co phong.\n";
 }
 
 void Menu::run() {
-    AccountManager accMgr;
-    accMgr.load(); // Tai danh sach tai khoan tu data/users.txt
+    loginMenu();
+}
 
-    const Account* currentAccount = nullptr;
-    int authChoice;
+void Menu::loginMenu() {
+    while (true) {
+        InputHandler::clearScreen();
+        cout << "\n====================================================\n";
+        cout << "           HE THONG QUAN LY BAN VE CINEMA\n";
+        cout << "====================================================\n";
+        cout << "1. Dang nhap\n";
+        cout << "2. Dang ky Customer\n";
+        cout << "0. Thoat\n";
 
-    // --- MAN HINH XAC THUC (DANG NHAP / DANG KY) ---
-    do {
-        cout << "\n================ HE THONG XEM PHIM ================" << endl;
-        cout << "1. Dang nhap" << endl;
-        cout << "2. Dang ky tai khoan khach hang" << endl;
-        cout << "0. Thoat chuong trinh" << endl;
-        cout << "===================================================" << endl;
-        cout << "Moi ban chon: ";
-        cin >> authChoice;
-
-        if (authChoice == 1) {
-            string user, pass;
-            cout << "Nhap username: "; cin >> user;
-            
-            // --- XU LY AN MAT KHAU BANG DAU * ---
-            cout << "Nhap password: ";
-            pass = "";
-            char ch;
-            while ((ch = _getch()) != '\r') {
-                if (ch == '\b') {
-                    if (pass.length() > 0) {
-                        pass.pop_back();
-                        cout << "\b \b";
-                    }
-                } else {
-                    pass += ch;
-                    cout << "*";
-                }
-            }
-            cout << endl;
-            // ------------------------------------
-
-            currentAccount = accMgr.authenticate(user, pass);
-            if (currentAccount != nullptr) {
-                if (!currentAccount->active) {
-                    cout << ">> Tai khoan cua ban da bi khoa!" << endl;
-                    currentAccount = nullptr;
-                    system("pause");
-                } else {
-                    cout << ">> Dang nhap thanh cong! Xin chao: " << currentAccount->fullName << endl;
-                    system("pause");
-                    break; // Thoat vong lap dang nhap, di tiep vao he thong
-                }
-            } else {
-                cout << ">> Sai username hoac password!" << endl;
-                system("pause");
-            }
-        } 
-        else if (authChoice == 2) {
-            string user, pass, name, phone, err;
-            cout << "\n--- DANG KY TAI KHOAN ---" << endl;
-            cout << "Nhap username moi: "; cin >> user;
-            cout << "Nhap password: "; cin >> pass;
-            cin.ignore();
-            cout << "Nhap ho ten day du: "; getline(cin, name);
-            cout << "Nhap so dien thoai: "; cin >> phone;
-
-            if (accMgr.registerAccount(user, pass, name, phone, err)) {
-                cout << ">> Dang ky tai khoan thanh cong! Ban co the dang nhap ngay." << endl;
-            } else {
-                cout << ">> Dang ky that bai: " << err << endl;
-            }
-            system("pause");
-        } 
-        else if (authChoice == 0) {
-            cout << "Tam biet!" << endl;
+        const int choice = InputHandler::getInt("Chon: ", 0, 2);
+        if (choice == 0) {
             return;
         }
-    } while (true);
 
-    // --- MENU CHINH SAU KHI DANG NHAP ---
-    int choice;
-    Role userRole = AccountManager::getRole(*currentAccount);
-
-    do {
-        cout << "\n============= HE THONG DAT VE XEM PHIM =============" << endl;
-        cout << "Xin chao: " << currentAccount->fullName << " (" << currentAccount->role << ")" << endl;
-        cout << "----------------------------------------------------" << endl;
-        
-        if (userRole == Role::Customer) {
-            cout << "1. Dat ve ngay (Cac phim dang chieu)" << endl;
-            cout << "2. Tim phim theo ten" << endl;
-            cout << "3. Tim phim theo the loai" << endl;
-            cout << "4. Xem lich su dat ve cua toi" << endl;
-            cout << "0. Dang xuat & Thoat" << endl;
-        } else {
-            cout << "1. Menu Khach Hang (Dat ve)" << endl;
-            cout << "2. Menu Quan Ly (Admin / Staff)" << endl;
-            cout << "0. Dang xuat & Thoat" << endl;
-        }
-        cout << "====================================================" << endl;
-        cout << "Moi ban chon: ";
-        cin >> choice;
-
-        if (userRole == Role::Customer) {
-            if (choice == 1) {
-                vector<Movie> list = movieMgr.getMoviesByStatus("Dang chieu");
-                displayAndSelectMovie(list);
-            } else if (choice == 2) {
-                string keyword;
-                cout << "Nhap ten phim can tim: ";
-                cin.ignore();
-                getline(cin, keyword);
-                vector<Movie> list = movieMgr.searchMoviesByTitle(keyword);
-                displayAndSelectMovie(list);
-            } else if (choice == 3) {
-                string keyword;
-                cout << "Nhap the loai can tim: ";
-                cin.ignore();
-                getline(cin, keyword);
-                vector<Movie> list = movieMgr.searchMoviesByGenre(keyword);
-                displayAndSelectMovie(list);
-            } else if (choice == 4) {
-                string currentUsername;
-                cout << ">> [Bao Mat] Vui long xac nhan lai Username cua ban de tra cuu: ";
-                cin >> currentUsername;
-                showTicketHistory(currentUsername); 
-                system("pause");
+        if (choice == 2) {
+            const string username = InputHandler::getLine("Username: ");
+            const string password = InputHandler::getPassword("Password: ");
+            const string name = InputHandler::getLine("Ho ten: ");
+            const string phone = InputHandler::getLine("So dien thoai: ");
+            const string email = InputHandler::getLine("Email: ");
+            string error;
+            if (accountManager.registerCustomer(username, password, name, phone, email, error)) {
+                cout << "Dang ky Customer thanh cong.\n";
+            } else {
+                cout << "Loi: " << error << '\n';
             }
-        } else {
-            if (choice == 1) {
-                showCustomerMenu();
-            } else if (choice == 2) {
-                showAdminMenu();
-            }
+            pause();
+            continue;
         }
 
-        if (choice == 0) {
-            cout << "Dang luu du lieu vao file txt..." << endl;
-            movieMgr.saveToFile();
-            showtimeMgr.saveToFile();
-            accMgr.save();
-            cout << "Da luu thanh cong. Tam biet!" << endl;
-            break;
+        const string username = InputHandler::getLine("Username: ");
+        const string password = InputHandler::getPassword("Password: ");
+        const Account* account = accountManager.authenticate(username, password);
+
+        if (account == nullptr) {
+            cout << "Sai username/password.\n";
+            pause();
+            continue;
         }
-    } while (choice != 0);
+        if (!account->active) {
+            cout << "Tai khoan dang bi khoa.\n";
+            pause();
+            continue;
+        }
+
+        cout << "Dang nhap thanh cong: " << account->fullName
+             << " (" << roleText(AccountManager::getRole(*account)) << ")\n";
+
+        if (AccountManager::isManager(*account)) {
+            managerMenu(*account);
+        } else if (AccountManager::isStaff(*account)) {
+            staffMenu(*account);
+        } else {
+            customerMenu(*account);
+        }
+    }
 }
 
-void Menu::showCustomerMenu() {
-    int choice;
-    do {
-        cout << "\n--- MENU KHACH HANG ---" << endl;
-        cout << "1. Dat ve ngay (Cac phim dang chieu)" << endl;
-        cout << "2. Tim phim theo ten" << endl;
-        cout << "3. Tim phim theo the loai" << endl;
-        cout << "4. Xem lich su dat ve cua toi" << endl;
-        cout << "0. Quay lai" << endl;
-        cout << "Moi chon: ";
-        cin >> choice;
+void Menu::customerMenu(const Account& account) {
+    while (true) {
+        InputHandler::clearScreen();
+        cout << "\n---------------- CUSTOMER ----------------\n";
+        cout << "1. Dat nhieu ghe trong mot Booking\n";
+        cout << "2. Tra cuu phim va lich chieu\n";
+        cout << "3. Xem Booking cua toi\n";
+        cout << "4. Huy Booking (>= 30 phut truoc gio chieu)\n";
+        cout << "0. Dang xuat\n";
+
+        const int choice = InputHandler::getInt("Chon: ", 0, 4);
+        if (choice == 0) return;
+        if (choice == 1) bookingOnline(account);
+        if (choice == 2) lookupMoviesAndShowtimes();
+        if (choice == 3) bookingHistory(account.id);
+        if (choice == 4) cancelBooking(account.id, false);
+    }
+}
+
+void Menu::staffMenu(const Account& account) {
+    while (true) {
+        InputHandler::clearScreen();
+        cout << "\n---------------- STAFF ----------------\n";
+        cout << "1. Ban ve tai quay\n";
+        cout << "2. Tra cuu phim/lich chieu\n";
+        cout << "3. Xem Booking\n";
+        cout << "4. Huy Booking\n";
+        cout << "5. Xem danh sach Customer\n";
+        cout << "0. Dang xuat\n";
+
+        const int choice = InputHandler::getInt("Chon: ", 0, 5);
+        if (choice == 0) return;
+        if (choice == 1) bookingAtCounter(account);
+        if (choice == 2) lookupMoviesAndShowtimes();
+        if (choice == 3) {
+            const string id = InputHandler::getLine("Customer ID: ");
+            bookingHistory(id);
+        }
+        if (choice == 4) cancelBooking("", true);
+        if (choice == 5) {
+            vector<Account> customers = accountManager.getCustomers();
+            for (const Account& customer : customers) {
+                cout << customer.id << " | " << customer.fullName
+                     << " | " << customer.phone << '\n';
+            }
+            pause();
+        }
+    }
+}
+
+void Menu::managerMenu(const Account& account) {
+    Roles::Manager managerObject(account.id, account.fullName, account.phone, account.email);
+    cout << "Quyen Manager: quan ly Staff, phim, suat chieu, phong, Customer, thong ke.\n";
+
+    while (true) {
+        InputHandler::clearScreen();
+        cout << "\n================ MANAGER ================\n";
+        cout << "1. Quan ly Staff (tao/khoa/mo khoa)\n";
+        cout << "2. Quan ly phim\n";
+        cout << "3. Quan ly Showtime\n";
+        cout << "4. Quan ly phong + so do ghe\n";
+        cout << "5. Quan ly Customer\n";
+        cout << "6. Ban ve tai quay\n";
+        cout << "7. Tra cuu phim/lich chieu\n";
+        cout << "8. Thong ke\n";
+        cout << "9. Xem tat ca Booking\n";
+        cout << "0. Dang xuat\n";
+
+        const int choice = InputHandler::getInt("Chon: ", 0, 9);
+        if (choice == 0) return;
+        if (choice == 1) staffAccountMenu();
+        if (choice == 2) movieMenu();
+        if (choice == 3) showtimeMenu();
+        if (choice == 4) roomMenu();
+        if (choice == 5) customerManagementMenu();
+        if (choice == 6) bookingAtCounter(account);
+        if (choice == 7) lookupMoviesAndShowtimes();
+        if (choice == 8) statisticsMenu();
+        if (choice == 9) {
+            for (const Booking& booking : bookingManager.getItems()) {
+                cout << booking.getBookingId() << " | Customer: "
+                     << booking.getCustomerId() << " | Showtime: "
+                     << booking.getShowtimeId() << " | "
+                     << booking.getStatusText() << " | "
+                     << fixed << setprecision(0) << booking.getTotal() << " VND\n";
+            }
+            pause();
+        }
+    }
+}
+
+void Menu::staffAccountMenu() {
+    while (true) {
+        cout << "\n---------- QUAN LY STAFF (CHI MANAGER) ----------\n";
+        cout << "1. Tao Staff\n2. Khoa Staff\n3. Mo khoa Staff\n4. Danh sach Staff\n0. Quay lai\n";
+        const int choice = InputHandler::getInt("Chon: ", 0, 4);
+        if (choice == 0) return;
 
         if (choice == 1) {
-            vector<Movie> list = movieMgr.getMoviesByStatus("Dang chieu");
-            displayAndSelectMovie(list);
+            string error;
+            const string username = InputHandler::getLine("Username: ");
+            const string password = InputHandler::getPassword("Password: ");
+            const string name = InputHandler::getLine("Ho ten: ");
+            const string phone = InputHandler::getLine("SDT: ");
+            const string email = InputHandler::getLine("Email: ");
+            if (accountManager.createStaff(username, password, name, phone, email, error)) {
+                cout << "Tao Staff thanh cong.\n";
+            } else {
+                cout << "Loi: " << error << '\n';
+            }
+        } else if (choice == 2 || choice == 3) {
+            const string id = InputHandler::getLine("Staff ID: ");
+            string error;
+            if (accountManager.setStaffStatus(id, choice == 3, error)) {
+                cout << (choice == 2 ? "Da khoa Staff.\n" : "Da mo khoa Staff.\n");
+            } else {
+                cout << "Loi: " << error << '\n';
+            }
+        } else {
+            // Danh sach Staff duoc hien thi ben duoi.
+        }
+
+        cout << "\n---------------- DANH SACH STAFF ----------------\n";
+        cout << left << setw(8) << "ID" << setw(18) << "USERNAME"
+             << setw(26) << "HO TEN" << setw(12) << "TRANG THAI" << '\n';
+        cout << string(64, '-') << '\n';
+        for (const Account& staff : accountManager.getStaff()) {
+            cout << left << setw(8) << staff.id << setw(18) << staff.username
+                 << setw(26) << staff.fullName.substr(0, 25)
+                 << (staff.active ? "Active" : "Locked") << '\n';
+        }
+        pause();
+    }
+}
+
+void Menu::movieMenu() {
+    while (true) {
+        cout << "\n---------- QUAN LY PHIM ----------\n";
+        cout << "1. Them\n2. Sua\n3. Xoa\n4. Doi trang thai\n5. Xem\n0. Quay lai\n";
+        const int choice = InputHandler::getInt("Chon: ", 0, 5);
+        if (choice == 0) return;
+
+        string error;
+        if (choice == 1) {
+            const string id = InputHandler::getLine("Ma phim (VD M11): ");
+            const string title = InputHandler::getLine("Ten phim: ");
+            const string genre = InputHandler::getLine("The loai: ");
+            const int duration = InputHandler::getInt("Thoi luong: ", 1, 1000);
+            const int age = InputHandler::getInt("Do tuoi: ", 0, 100);
+            const string status = InputHandler::getLine("Trang thai: ");
+            movieManager.addMovie(Movie(id, title, duration, genre, age, status), error);
         } else if (choice == 2) {
-            string keyword;
-            cout << "Nhap ten phim can tim: ";
-            cin.ignore();
-            getline(cin, keyword);
-            vector<Movie> list = movieMgr.searchMoviesByTitle(keyword);
-            displayAndSelectMovie(list);
+            printMovies(movieManager.getItems());
+            const string id = InputHandler::getLine("Ma phim: ");
+            const string title = InputHandler::getLine("Ten moi: ");
+            const int duration = InputHandler::getInt("Thoi luong moi: ", 1, 1000);
+            const string genre = InputHandler::getLine("The loai moi: ");
+            const int age = InputHandler::getInt("Do tuoi moi: ", 0, 100);
+            movieManager.updateMovie(id, title, duration, genre, age, error);
         } else if (choice == 3) {
-            string keyword;
-            cout << "Nhap the loai can tim (VD: Hanh dong): ";
-            cin.ignore();
-            getline(cin, keyword);
-            vector<Movie> list = movieMgr.searchMoviesByGenre(keyword);
-            displayAndSelectMovie(list);
+            printMovies(movieManager.getItems());
+            movieManager.deleteMovie(InputHandler::getLine("Ma phim: "), error);
+        } else if (choice == 4) {
+            printMovies(movieManager.getItems());
+            const string id = InputHandler::getLine("Ma phim: ");
+            const string status = InputHandler::getLine("Trang thai moi: ");
+            movieManager.setStatus(id, status, error);
+        } else {
+            printMovies(movieManager.getItems());
         }
-        else if (choice == 4) {
-            string currentUsername;
-            cout << ">> [Bao Mat] Vui long xac nhan lai Username cua ban de tra cuu: ";
-            cin >> currentUsername;
-            showTicketHistory(currentUsername); 
-            system("pause");
+
+        if (!error.empty()) {
+            cout << "Loi: " << error << '\n';
+        } else if (choice != 5) {
+            cout << "Thuc hien thanh cong.\n";
+            printMovies(movieManager.getItems());
         }
-    } while (choice != 0);
+        pause();
+    }
 }
 
-void Menu::displayAndSelectMovie(vector<Movie>& movies) {
+void Menu::showtimeMenu() {
+    while (true) {
+        cout << "\n---------- QUAN LY SHOWTIME ----------\n";
+        cout << "1. Them\n2. Sua\n3. Huy\n4. Xoa\n5. Xem\n0. Quay lai\n";
+        const int choice = InputHandler::getInt("Chon: ", 0, 5);
+        if (choice == 0) return;
+
+        string error;
+        if (choice == 1) {
+            const string id = InputHandler::getLine("Ma Showtime (VD ST31): ");
+            const string movieId = InputHandler::getLine("Ma phim: ");
+            const string roomId = InputHandler::getLine("Ma phong: ");
+            const string date = InputHandler::getLine("Ngay YYYY-MM-DD: ");
+            const string time = InputHandler::getLine("Gio HH:MM: ");
+            const double price = InputHandler::getDouble("Gia co ban: ", 0);
+            showtimeManager.addShowtime(Showtime(id, movieId, roomId, date, time, price), error);
+        } else if (choice == 2) {
+            printShowtimes(showtimeManager.getItems());
+            const string id = InputHandler::getLine("Ma Showtime: ");
+            const string movieId = InputHandler::getLine("Ma phim: ");
+            const string roomId = InputHandler::getLine("Ma phong: ");
+            const string date = InputHandler::getLine("Ngay: ");
+            const string time = InputHandler::getLine("Gio: ");
+            const double price = InputHandler::getDouble("Gia: ", 0);
+            showtimeManager.updateShowtime(id, movieId, roomId, date, time, price, error);
+        } else if (choice == 3) {
+            printShowtimes(showtimeManager.getItems());
+            showtimeManager.cancelShowtime(InputHandler::getLine("Ma Showtime: "), error);
+        } else if (choice == 4) {
+            printShowtimes(showtimeManager.getItems());
+            showtimeManager.deleteShowtime(InputHandler::getLine("Ma Showtime: "), error);
+        } else {
+            printShowtimes(showtimeManager.getItems());
+        }
+
+        if (!error.empty()) {
+            cout << "Loi: " << error << '\n';
+        } else if (choice != 5) {
+            cout << "Thuc hien thanh cong.\n";
+            printShowtimes(showtimeManager.getItems());
+        }
+        pause();
+    }
+}
+
+void Menu::roomMenu() {
+    while (true) {
+        cout << "\n---------- QUAN LY PHONG + GHE ----------\n";
+        cout << "1. Tao phong (dong x cot)\n2. Sua kich thuoc\n3. Gan VIP ghe\n4. Bo VIP ghe\n5. Khoa ghe bao tri\n6. Mo khoa ghe\n7. Xem so do\n8. Xoa phong\n0. Quay lai\n";
+        const int choice = InputHandler::getInt("Chon: ", 0, 8);
+        if (choice == 0) return;
+
+        string error;
+        if (choice == 1) {
+            printRooms();
+            const string name = InputHandler::getLine("Ten phong: ");
+            const int rows = InputHandler::getInt("So dong (1-26): ", 1, 26);
+            const int cols = InputHandler::getInt("So cot (1-30): ", 1, 30);
+            string newId;
+            if (roomManager.createRoom(name, rows, cols, newId, error)) {
+                cout << "Tao phong thanh cong: " << newId << '\n';
+            }
+        } else if (choice == 2) {
+            printRooms();
+            const string id = InputHandler::getLine("Ma phong: ");
+            const string name = InputHandler::getLine("Ten phong moi: ");
+            const int rows = InputHandler::getInt("So dong: ", 1, 26);
+            const int cols = InputHandler::getInt("So cot: ", 1, 30);
+            roomManager.updateRoom(id, name, rows, cols, error);
+        } else if (choice >= 3 && choice <= 6) {
+            printRooms();
+            const string roomId = InputHandler::getLine("Ma phong: ");
+            const string seatId = upper(InputHandler::getLine("Ma ghe (VD A0): "));
+            if (choice == 3) roomManager.setSeatVIP(roomId, seatId, true, error);
+            if (choice == 4) roomManager.setSeatVIP(roomId, seatId, false, error);
+            if (choice == 5) roomManager.setSeatMaintenance(roomId, seatId, true, error);
+            if (choice == 6) roomManager.setSeatMaintenance(roomId, seatId, false, error);
+        } else if (choice == 7) {
+            const string roomId = InputHandler::getLine("Ma phong: ");
+            const CinemaRoom* room = roomManager.findById(roomId);
+            if (room != nullptr) room->displaySeatLayout();
+            else error = "Khong tim thay phong.";
+        } else if (choice == 8) {
+            printRooms();
+            roomManager.deleteRoom(InputHandler::getLine("Ma phong: "), error);
+        }
+
+        if (!error.empty()) {
+            cout << "Loi: " << error << '\n';
+        } else {
+            cout << "Thuc hien thanh cong.\n";
+            printRooms();
+        }
+        pause();
+    }
+}
+
+void Menu::customerManagementMenu() {
+    while (true) {
+        cout << "\n---------- QUAN LY CUSTOMER ----------\n";
+        cout << "1. Danh sach\n2. Tim kiem\n3. Sua thong tin\n4. Xoa\n0. Quay lai\n";
+        const int choice = InputHandler::getInt("Chon: ", 0, 4);
+        if (choice == 0) return;
+
+        string error;
+        if (choice == 1 || choice == 2) {
+            const string key = choice == 2 ? InputHandler::getLine("Tu khoa: ") : "";
+            const vector<Account> customers = accountManager.searchCustomers(key);
+            cout << "\n" << left << setw(8) << "ID" << setw(18) << "USERNAME"
+                 << setw(26) << "HO TEN" << setw(15) << "SDT" << "EMAIL\n";
+            cout << string(90, '-') << '\n';
+            for (const Account& customer : customers) {
+                cout << left << setw(8) << customer.id
+                     << setw(18) << customer.username
+                     << setw(26) << customer.fullName.substr(0, 25)
+                     << setw(15) << customer.phone << customer.email << '\n';
+            }
+        } else if (choice == 3) {
+            const string id = InputHandler::getLine("Customer ID: ");
+            const string name = InputHandler::getLine("Ho ten moi: ");
+            const string phone = InputHandler::getLine("SDT moi: ");
+            const string email = InputHandler::getLine("Email moi: ");
+            accountManager.updateCustomer(id, name, phone, email, error);
+        } else {
+            accountManager.deleteCustomer(InputHandler::getLine("Customer ID: "), error);
+        }
+
+        if (!error.empty()) cout << "Loi: " << error << '\n';
+        else if (choice >= 3) cout << "Thuc hien thanh cong.\n";
+
+        cout << "\n---------------- DANH SACH CUSTOMER ----------------\n";
+        cout << left << setw(8) << "ID" << setw(18) << "USERNAME"
+             << setw(26) << "HO TEN" << setw(15) << "SDT" << "EMAIL\n";
+        cout << string(90, '-') << '\n';
+        for (const Account& customer : accountManager.getCustomers()) {
+            cout << left << setw(8) << customer.id << setw(18) << customer.username
+                 << setw(26) << customer.fullName.substr(0, 25)
+                 << setw(15) << customer.phone << customer.email << '\n';
+        }
+        pause();
+    }
+}
+
+string trimSeatInput(string value);
+
+void Menu::bookingOnline(const Account& customer) {
+    InputHandler::clearScreen();
+
+    const int movieIndex = chooseMovieForBooking();
+    if (movieIndex < 0) {
+        return;
+    }
+
+    const vector<Movie> movies = movieManager.getByStatus("Dang chieu");
+    if (movieIndex >= static_cast<int>(movies.size())) {
+        return;
+    }
+
+    const Movie& selectedMovie = movies[movieIndex];
+    cout << "\n=======================================================\n";
+    cout << ">> DANG DAT VE CHO PHIM: " << selectedMovie.getTitle() << " <<\n";
+
+    const int showtimeIndex = chooseShowtimeForMovie(selectedMovie.getMovieId());
+    if (showtimeIndex < 0) {
+        return;
+    }
+
+    vector<Showtime> availableShowtimes;
+    for (const Showtime& item : showtimeManager.getByMovieId(selectedMovie.getMovieId())) {
+        if (item.getStatus() != "Da huy") {
+            availableShowtimes.push_back(item);
+        }
+    }
+    if (showtimeIndex >= static_cast<int>(availableShowtimes.size())) {
+        return;
+    }
+
+    const Showtime& showtime = availableShowtimes[showtimeIndex];
+    const CinemaRoom* room = roomManager.findById(showtime.getRoomId());
+    if (room == nullptr) {
+        cout << "Phong khong ton tai.\n";
+        pause();
+        return;
+    }
+
+    InputHandler::clearScreen();
+    cout << "\n>> Ban da chon Suat: " << showtime.getStartTime()
+         << " (Phong: " << showtime.getRoomId() << ")\n";
+    room->displaySeatLayout(bookingManager.getBookedSeats(showtime.getShowtimeId()));
+
+    const string input = InputHandler::getLine(
+        ">> Nhap Ma ghe ban muon ngoi (VD: A0, D3) hoac go '0' de huy: ");
+    if (input == "0") {
+        return;
+    }
+
+    BookingRequest request{customer.id, showtime.getShowtimeId(), "", {}};
+    stringstream stream(input);
+    string seat;
+    while (getline(stream, seat, ',')) {
+        seat = trimSeatInput(seat);
+        if (!seat.empty()) {
+            request.seatIds.push_back(seat);
+        }
+    }
+
+    string bookingId;
+    string error;
+    if (bookingManager.createBooking(request, showtimeManager, roomManager, bookingId, error)) {
+        const Booking* booking = bookingManager.findById(bookingId);
+        const Movie* movie = movieManager.findById(showtime.getMovieId());
+        if (booking != nullptr && movie != nullptr) {
+            InputHandler::clearScreen();
+            booking->displayInvoice(movie->getTitle(), showtime.getShowDate(),
+                                    showtime.getStartTime(), showtime.getRoomId());
+        }
+    } else {
+        cout << "Dat ve that bai: " << error << '\n';
+    }
+    pause();
+}
+
+int Menu::chooseMovieForBooking() {
+    const vector<Movie> movies = movieManager.getByStatus("Dang chieu");
+
+    cout << "\n--- KET QUA TIM KIEM ---\n";
+    int index = 1;
+    for (const Movie& movie : movies) {
+        cout << "[" << index++ << "] " << movie.getTitle()
+             << " | The loai: " << movie.getGenre()
+             << " | " << movie.getDuration() << " phut\n";
+    }
+    cout << "[0] Huy bo va quay lai\n";
+
     if (movies.empty()) {
-        cout << ">> Khong co bo phim nao phu hop!" << endl;
-        system("pause");
-        return;
+        cout << "Khong co phim dang chieu.\n";
+        pause();
+        return -1;
     }
 
-    cout << "\n--- KET QUA TIM KIEM ---" << endl;
-    for (int i = 0; i < movies.size(); i++) {
-        cout << "[" << i + 1 << "] " << movies[i].getTitle() 
-             << " | The loai: " << movies[i].getGenre() 
-             << " | " << movies[i].getDuration() << " phut" << endl;
+    const int choice = InputHandler::getInt(">> Chon phim ban muon xem (Nhap so): ",
+                                            0, static_cast<int>(movies.size()));
+    if (choice == 0) {
+        return -1;
     }
-    cout << "[0] Huy bo va quay lai" << endl;
-    
-    int select;
-    cout << ">> Chon phim ban muon xem (Nhap so): ";
-    cin >> select;
-
-    if (select > 0 && select <= movies.size()) {
-        bookingFlow(movies[select - 1]);
-    }
+    return choice - 1;
 }
 
-void Menu::bookingFlow(Movie selectedMovie) {
-    cout << "\n=======================================================" << endl;
-    cout << ">> DANG DAT VE CHO PHIM: " << selectedMovie.getTitle() << " <<" << endl;
-    
-    vector<Showtime> listST = showtimeMgr.getShowtimesByMovieId(selectedMovie.getMovieId());
-    
-    if (listST.empty()) {
-        cout << ">> Xin loi, phim nay hien chua co lich chieu nao!" << endl;
-        system("pause");
-        return;
+int Menu::chooseShowtimeForMovie(const string& movieId) {
+    const vector<Showtime> showtimes = showtimeManager.getByMovieId(movieId);
+
+    cout << "\n--- DANH SACH SUAT CHIEU ---\n";
+    int index = 1;
+    for (const Showtime& showtime : showtimes) {
+        if (showtime.getStatus() == "Da huy") {
+            continue;
+        }
+        cout << "[" << index++ << "] Ma suat: " << showtime.getShowtimeId()
+             << " | Ngay: " << showtime.getShowDate()
+             << " | Gio: " << showtime.getStartTime()
+             << " | Phong: " << showtime.getRoomId()
+             << " | Gia ve co ban: " << fixed << setprecision(0)
+             << showtime.getBasePrice() << " VND\n";
+    }
+    cout << "[0] Huy bo va quay lai\n";
+
+    vector<Showtime> available;
+    for (const Showtime& showtime : showtimes) {
+        if (showtime.getStatus() != "Da huy") {
+            available.push_back(showtime);
+        }
     }
 
-    cout << "\n--- DANH SACH SUAT CHIEU ---" << endl;
-    for (int i = 0; i < listST.size(); i++) {
-        cout << "[" << i + 1 << "] ";
-        listST[i].displayShowtime();
+    if (available.empty()) {
+        cout << "Khong co suat chieu dang hoat dong cho phim nay.\n";
+        pause();
+        return -1;
     }
-    cout << "[0] Huy bo va quay lai" << endl;
-    
-    int selectST;
-    cout << ">> Chon suat chieu (Nhap so): ";
-    cin >> selectST;
 
-    if (selectST > 0 && selectST <= listST.size()) {
-        Showtime selectedST = listST[selectST - 1];
-        CinemaRoom room(selectedST.getRoomId(), "Phong Chieu VIP");
-        
-        ifstream inFile("data/tickets.txt");
-        if (inFile.is_open()) {
-            string line;
-            while (getline(inFile, line)) {
-                stringstream ss(line);
-                string tId, mName, tDate, tTime, sId, tType, tPrice;
-                getline(ss, tId, '|'); getline(ss, mName, '|'); getline(ss, tDate, '|');
-                getline(ss, tTime, '|'); getline(ss, sId, '|');
-                
-                if (tId.find(selectedST.getShowtimeId()) != string::npos) {
-                    Seat* s = room.getSeatById(sId);
-                    if (s != nullptr) s->setBooked(true);
+    const int choice = InputHandler::getInt(">> Chon suat chieu (Nhap so): ",
+                                            0, static_cast<int>(available.size()));
+    if (choice == 0) {
+        return -1;
+    }
+
+    // getByMovieId co the chua ca Showtime da huy, nen tra ve vi tri trong
+    // danh sach da loc. bookingOnline se lay lai cung tap available.
+    const Showtime& selected = available[choice - 1];
+    const vector<Showtime> all = showtimeManager.getByMovieId(movieId);
+    for (size_t i = 0; i < all.size(); ++i) {
+        if (all[i].getShowtimeId() == selected.getShowtimeId()) {
+            int availableIndex = 0;
+            for (size_t j = 0; j <= i; ++j) {
+                if (all[j].getStatus() != "Da huy") {
+                    ++availableIndex;
                 }
             }
-            inFile.close();
-        }
-
-        cout << "\n>> Ban da chon Suat: " << selectedST.getStartTime() << " (Phong: " << selectedST.getRoomId() << ")" << endl;
-        room.displayRoomMap();
-        
-        string selectSeatId;
-        cout << ">> Nhap Ma ghe ban muon ngoi (VD: A5, D8) hoac go '0' de huy: ";
-        cin >> selectSeatId;
-
-        if (selectSeatId == "0") return;
-
-        selectSeatId[0] = toupper(selectSeatId[0]);
-        Seat* chosenSeat = room.getSeatById(selectSeatId);
-        
-        if (chosenSeat != nullptr) {
-            if (chosenSeat->getIsBooked()) {
-                cout << ">> Ghe nay da co nguoi dat! Vui long chon ghe khac." << endl;
-                system("pause");
-                return;
-            }
-
-            chosenSeat->setBooked(true);
-            
-            Ticket* myTicket = nullptr;
-            string ticketId = "TICKET_" + selectedST.getShowtimeId() + "_" + chosenSeat->getSeatId();
-            string ticketType = "Thuong";
-            double finalPrice = selectedST.getBasePrice();
-
-            if (chosenSeat->getIsVIP()) {
-                myTicket = new VIPTicket(ticketId, selectedST.getBasePrice());
-                ticketType = "VIP";
-                finalPrice = selectedST.getBasePrice() * 1.5;
-            } else {
-                myTicket = new StandardTicket(ticketId, selectedST.getBasePrice());
-            }
-
-            ofstream outFile("data/tickets.txt", ios::app);
-            if (outFile.is_open()) {
-                outFile << ticketId << "|" << selectedMovie.getTitle() << "|" 
-                        << selectedST.getShowDate() << "|" << selectedST.getStartTime() << "|" 
-                        << chosenSeat->getSeatId() << "|" << ticketType << "|" << finalPrice << "\n";
-                outFile.close();
-            }
-
-            cout << "\n========================================" << endl;
-            cout << "       DAT VE THANH CONG!               " << endl;
-            cout << "========================================" << endl;
-            cout << "Phim: " << selectedMovie.getTitle() << endl;
-            cout << "Suat chieu: " << selectedST.getStartTime() << " | Ngay: " << selectedST.getShowDate() << endl;
-            cout << "Vi tri ghe: " << chosenSeat->getSeatId() << endl;
-            
-            myTicket->displayTicket();
-            cout << "========================================\n" << endl;
-            system("pause");
-
-            delete myTicket;
-        } else {
-            cout << ">> Ma ghe khong ton tai! Vui long nhap dung dinh dang (VD: A5, H12)." << endl;
-            system("pause");
+            return availableIndex - 1;
         }
     }
+    return -1;
 }
 
-void Menu::showAdminMenu() {
-    int choice;
-    do {
-        cout << "\n--- MENU QUAN LY ---" << endl;
-        cout << "1. Quan ly Phim (Them/Sua/Xoa)" << endl;
-        cout << "2. Quan ly Suat chieu (Them suat chieu)" << endl;
-        cout << "3. Xem lich su dat ve (Toan he thong)" << endl; 
-        cout << "0. Quay lai menu chinh" << endl;
-        cout << "Moi chon: ";
-        cin >> choice;
+string trimSeatInput(string value) {
+    const size_t first = value.find_first_not_of(" \t\r\n");
+    if (first == string::npos) {
+        return "";
+    }
+    const size_t last = value.find_last_not_of(" \t\r\n");
+    value = value.substr(first, last - first + 1);
+    transform(value.begin(), value.end(), value.begin(),
+              [](unsigned char c) { return static_cast<char>(toupper(c)); });
+    return value;
+}
+
+void Menu::bookingAtCounter(const Account& operatorAccount) {
+    InputHandler::clearScreen();
+    const string customerId = InputHandler::getLine("Customer ID: ");
+    const Account* customer = accountManager.findById(customerId);
+    if (customer == nullptr || !AccountManager::isCustomer(*customer)) {
+        cout << "Customer khong ton tai.\n";
+        pause();
+        return;
+    }
+
+    cout << "\n--- BAN VE TAI QUAY ---\n";
+    const int movieIndex = chooseMovieForBooking();
+    if (movieIndex < 0) {
+        return;
+    }
+
+    const vector<Movie> movies = movieManager.getByStatus("Dang chieu");
+    const Movie& selectedMovie = movies[movieIndex];
+    cout << "\n>> DANG BAN VE CHO PHIM: " << selectedMovie.getTitle() << " <<\n";
+
+    const int showtimeIndex = chooseShowtimeForMovie(selectedMovie.getMovieId());
+    if (showtimeIndex < 0) {
+        return;
+    }
+
+    vector<Showtime> available;
+    for (const Showtime& showtime : showtimeManager.getByMovieId(selectedMovie.getMovieId())) {
+        if (showtime.getStatus() != "Da huy") {
+            available.push_back(showtime);
+        }
+    }
+    const Showtime& showtime = available[showtimeIndex];
+
+    const CinemaRoom* room = roomManager.findById(showtime.getRoomId());
+    if (room == nullptr) {
+        cout << "Phong khong ton tai.\n";
+        pause();
+        return;
+    }
+
+    InputHandler::clearScreen();
+    cout << ">> Ban da chon Suat: " << showtime.getStartTime()
+         << " (Phong: " << showtime.getRoomId() << ")\n";
+    room->displaySeatLayout(bookingManager.getBookedSeats(showtime.getShowtimeId()));
+
+    const string input = InputHandler::getLine(
+        ">> Nhap Ma ghe ban muon ngoi (VD: A0, D3) hoac go '0' de huy: ");
+    if (input == "0") {
+        return;
+    }
+
+    BookingRequest request{customerId, showtime.getShowtimeId(), operatorAccount.id, {}};
+    stringstream stream(input);
+    string seat;
+    while (getline(stream, seat, ',')) {
+        seat = trimSeatInput(seat);
+        if (!seat.empty()) {
+            request.seatIds.push_back(seat);
+        }
+    }
+
+    string bookingId;
+    string error;
+    if (bookingManager.createBooking(request, showtimeManager, roomManager, bookingId, error)) {
+        const Booking* booking = bookingManager.findById(bookingId);
+        const Movie* movie = movieManager.findById(showtime.getMovieId());
+        if (booking != nullptr && movie != nullptr) {
+            InputHandler::clearScreen();
+            booking->displayInvoice(movie->getTitle(), showtime.getShowDate(),
+                                    showtime.getStartTime(), showtime.getRoomId());
+        }
+    } else {
+        cout << "Ban ve that bai: " << error << '\n';
+    }
+    pause();
+}
+
+void Menu::lookupMoviesAndShowtimes() {
+    cout << "\n1. Tat ca phim\n2. Tim theo ten\n3. Tim theo the loai\n4. Xem lich cua phim\n";
+    const int choice = InputHandler::getInt("Chon: ", 1, 4);
+    if (choice == 1) {
+        printMovies(movieManager.getItems());
+    } else if (choice == 2) {
+        printMovies(movieManager.searchByTitle(InputHandler::getLine("Tu khoa: ")));
+    } else if (choice == 3) {
+        printMovies(movieManager.searchByGenre(InputHandler::getLine("The loai: ")));
+    } else {
+        const string movieId = InputHandler::getLine("Ma phim: ");
+        printShowtimes(showtimeManager.getByMovieId(movieId));
+    }
+    pause();
+}
+
+void Menu::bookingHistory(const string& customerId) {
+    const vector<Booking> bookings = bookingManager.getCustomerBookings(customerId);
+
+    cout << "\n==================== LICH SU DAT VE ====================\n";
+    cout << left << setw(10) << "BOOKING"
+         << setw(12) << "CUSTOMER"
+         << setw(12) << "SHOWTIME"
+         << setw(12) << "TRANG THAI"
+         << setw(21) << "TAO LUC"
+         << setw(22) << "GHE"
+         << right << setw(15) << "TONG TIEN" << '\n';
+    cout << string(104, '-') << '\n';
+
+    if (bookings.empty()) {
+        cout << "Chua co lich su dat ve nao!\n";
+        cout << string(104, '-') << '\n';
+        pause();
+        return;
+    }
+
+    for (const Booking& booking : bookings) {
+        string seats;
+        for (size_t i = 0; i < booking.getTickets().size(); ++i) {
+            if (i > 0) seats += ", ";
+            seats += booking.getTickets()[i]->getSeatId();
+        }
+        if (seats.size() > 20) seats = seats.substr(0, 17) + "...";
+
+        cout << left << setw(10) << booking.getBookingId()
+             << setw(12) << booking.getCustomerId()
+             << setw(12) << booking.getShowtimeId()
+             << setw(12) << booking.getStatusText()
+             << setw(21) << booking.getCreatedAt()
+             << setw(22) << seats
+             << right << setw(15) << fixed << setprecision(0)
+             << booking.getTotal() << " VND\n";
+    }
+    cout << right;
+    cout << string(104, '-') << '\n';
+    pause();
+}
+
+void Menu::cancelBooking(const string& customerId, bool managerOrStaff) {
+    const string bookingId = InputHandler::getLine("Ma Booking: ");
+    const Booking* booking = bookingManager.findById(bookingId);
+    if (booking == nullptr) {
+        cout << "Khong tim thay Booking.\n";
+        pause();
+        return;
+    }
+    if (!managerOrStaff && booking->getCustomerId() != customerId) {
+        cout << "Customer chi duoc huy Booking cua chinh minh.\n";
+        pause();
+        return;
+    }
+
+    string error;
+    if (bookingManager.cancelBooking(bookingId, showtimeManager, error)) {
+        cout << "Huy Booking thanh cong.\n";
+    } else {
+        cout << "Khong the huy: " << error << '\n';
+    }
+    pause();
+}
+
+void Menu::statisticsMenu() {
+    while (true) {
+        InputHandler::clearScreen();
+        cout << "\n================ THONG KE DOANH THU ================\n";
+        cout << "1. Doanh thu theo ngay\n";
+        cout << "2. Doanh thu theo thang\n";
+        cout << "3. Doanh thu theo nam\n";
+        cout << "4. Tong Booking / tong ve da ban\n";
+        cout << "5. Doanh thu theo phim\n";
+        cout << "0. Quay lai\n";
+
+        const int choice = InputHandler::getInt("Chon: ", 0, 5);
+        if (choice == 0) {
+            return;
+        }
 
         if (choice == 1) {
-            int action;
-            cout << "\n--- QUAN LY PHIM ---" << endl;
-            cout << "1. Them phim moi" << endl;
-            cout << "2. Cap nhat trang thai phim" << endl;
-            cout << "3. Xoa phim" << endl;
-            cout << "4. Xem danh sach phim" << endl;
-            cout << "0. Quay lai" << endl;
-            cout << "Moi chon: ";
-            cin >> action;
-            
-            if (action == 1) {
-                string id, title, genre;
-                int duration, ageLimit;
-                vector<Movie> allMovies = movieMgr.getAll();
-                int maxMovieId = 0;
-                for (const auto& m : allMovies) {
-                    string currentId = m.getMovieId();
-                    if (currentId.length() >= 2 && currentId[0] == 'M') {
-                        int num = atoi(currentId.substr(1).c_str());
-                        if (num > maxMovieId) maxMovieId = num;
-                    }
-                }
-                int nextId = maxMovieId + 1;
-                id = "M" + string(nextId < 10 ? "0" : "") + to_string(nextId);
-                cout << "\n>> He thong tu dong cap Ma phim: " << id << endl;
-                cin.ignore(); 
-                cout << "Nhap Ten phim: "; getline(cin, title); 
-                cout << "Nhap The loai: "; getline(cin, genre);
-                cout << "Nhap Thoi luong (phut): "; cin >> duration;
-                cout << "Nhap Do tuoi quy dinh: "; cin >> ageLimit;
+            const string date = InputHandler::getLine("Nhap ngay (YYYY-MM-DD): ");
+            cout << "\nDoanh thu ngay " << date << ": "
+                 << fixed << setprecision(0)
+                 << bookingManager.revenueOnDate(date) << " VND\n";
+        } else if (choice == 2) {
+            const string month = InputHandler::getLine("Nhap thang (YYYY-MM): ");
+            cout << "\nDoanh thu thang " << month << ": "
+                 << fixed << setprecision(0)
+                 << bookingManager.revenueInMonth(month) << " VND\n";
+        } else if (choice == 3) {
+            const string year = InputHandler::getLine("Nhap nam (YYYY): ");
+            cout << "\nDoanh thu nam " << year << ": "
+                 << fixed << setprecision(0)
+                 << bookingManager.revenueInYear(year) << " VND\n";
+        } else if (choice == 4) {
+            cout << "\nTong Booking da thanh toan : " << bookingManager.totalPaidBookings() << '\n';
+            cout << "Tong ve da ban             : " << bookingManager.totalPaidTickets() << '\n';
+        } else if (choice == 5) {
+            cout << "\n================ DOANH THU THEO PHIM ================\n";
+            cout << left << setw(8) << "STT" << setw(12) << "MA PHIM"
+                 << setw(40) << "TEN PHIM" << right << setw(20) << "DOANH THU" << '\n';
+            cout << string(80, '-') << '\n';
 
-                Movie newMovie(id, title, duration, genre, ageLimit, "Dang chieu");
-                movieMgr.add(newMovie);
-                cout << ">> Them phim thanh cong!" << endl;
-                system("pause");
-            } 
-            else if (action == 2) {
-                cout << "\n--- DANH SACH PHIM HIEN TAI ---" << endl;
-                vector<Movie> allMovies = movieMgr.getAll();
-                if (allMovies.empty()) {
-                    cout << ">> Hien chua co phim nao trong he thong!" << endl;
-                } else {
-                    for (const auto& m : allMovies) {
-                        cout << "[Ma: " << m.getMovieId() << "] " << m.getTitle() 
-                             << " | Trang thai: " << m.getStatus() << endl;
-                    }
-                    string id, newStatus;
-                    cout << "\nNhap Ma phim can cap nhat (VD: M01): "; cin >> id;
-                    cin.ignore();
-                    cout << "Nhap Trang thai moi (Dang chieu / Sap chieu): "; getline(cin, newStatus);
-                    movieMgr.updateMovieStatus(id, newStatus);
-                }
-                system("pause");
-            } 
-            else if (action == 3) {
-                cout << "\n--- DANH SACH PHIM HIEN TAI ---" << endl;
-                vector<Movie> allMovies = movieMgr.getAll();
-                if (allMovies.empty()) {
-                    cout << ">> Hien chua co phim nao trong he thong!" << endl;
-                } else {
-                    for (const auto& m : allMovies) {
-                        cout << "[Ma: " << m.getMovieId() << "] " << m.getTitle() << endl;
-                    }
-                    string id;
-                    cout << "\nNhap Ma phim can xoa: "; cin >> id;
-                    movieMgr.deleteMovie(id);
-                }
-                system("pause");
+            const vector<pair<string, double>> ranking = bookingManager.revenueByMovie(showtimeManager);
+            int index = 1;
+            for (const auto& entry : ranking) {
+                const Movie* movie = movieManager.findById(entry.first);
+                cout << left << setw(8) << index++ << setw(12) << entry.first
+                     << setw(40) << (movie == nullptr ? "Khong tim thay" : movie->getTitle().substr(0, 39))
+                     << right << setw(20) << fixed << setprecision(0) << entry.second << " VND\n";
             }
-            else if (action == 4) {
-                vector<Movie> allMovies = movieMgr.getAll();
-                if (allMovies.empty()) {
-                    cout << ">> Hien chua co phim nao trong he thong!" << endl;
-                    system("pause");
-                } else {
-                    int itemsPerPage = 10;
-                    int totalMovies = allMovies.size();
-                    int totalPages = (totalMovies + itemsPerPage - 1) / itemsPerPage;
-                    int currentPage = 1;
-                    char nav;
-                    
-                    do {
-                        cout << "\n============================== DANH SACH PHIM ==============================\n";
-                        cout << left << setw(10) << "Ma Phim"
-                             << setw(30) << "Ten Phim"
-                             << setw(15) << "The Loai"
-                             << setw(15) << "Thoi Luong"
-                             << setw(10) << "Do Tuoi"
-                             << setw(15) << "Trang Thai" << endl;
-                        cout << string(95, '-') << endl;
-                        
-                        int startIdx = (currentPage - 1) * itemsPerPage;
-                        int endIdx = startIdx + itemsPerPage;
-                        if (endIdx > totalMovies) endIdx = totalMovies;
-                        
-                        for (int i = startIdx; i < endIdx; i++) {
-                            cout << left << setw(10) << allMovies[i].getMovieId()
-                                 << setw(30) << allMovies[i].getTitle()
-                                 << setw(15) << allMovies[i].getGenre()
-                                 << setw(15) << to_string(allMovies[i].getDuration()) + " phut"
-                                 << setw(10) << allMovies[i].getAgeLimit()
-                                 << setw(15) << allMovies[i].getStatus() << endl;
-                        }
-                        cout << "============================================================================\n";
-                        
-                        cout << ">> Trang " << currentPage << "/" << totalPages << " | Nhap [N] de sang trang | [P] de quay lai | [0] Thoat: ";
-                        cin >> nav;
-                        
-                        if ((nav == 'N' || nav == 'n') && currentPage < totalPages) {
-                            currentPage++;
-                        } else if ((nav == 'P' || nav == 'p') && currentPage > 1) {
-                            currentPage--;
-                        }
-                    } while (nav != '0');
-                }
+            if (ranking.empty()) {
+                cout << "Chua co doanh thu.\n";
             }
-        } // --- DAY LA DAU NGOAC DONG CUA phan (choice == 1) ---
-        
-        else if (choice == 2) {
-            string id, movieId, roomId, date, time;
-            double price;
-            
-            cout << "\n--- THEM SUAT CHIEU MOI ---" << endl;
-            cout << "\nDanh sach phim dang co trong he thong:" << endl;
-            vector<Movie> allMovies = movieMgr.getAll();
-            if (allMovies.empty()) {
-                cout << ">> Hien chua co phim nao! Vui long them phim truoc." << endl;
-                system("pause");
-                continue;
-            } else {
-                for (const auto& m : allMovies) {
-                    cout << " - [Ma: " << m.getMovieId() << "] " << m.getTitle() << endl;
-                }
-            }
-            cout << "---------------------------" << endl;
-
-            vector<Showtime> allST = showtimeMgr.getAll();
-            int maxSTId = 0;
-            for (const auto& st : allST) {
-                string currentId = st.getShowtimeId();
-                if (currentId.length() >= 3 && currentId.substr(0, 2) == "ST") {
-                    int num = atoi(currentId.substr(2).c_str());
-                    if (num > maxSTId) maxSTId = num;
-                }
-            }
-            int nextSTId = maxSTId + 1;
-            id = "ST" + string(nextSTId < 10 ? "0" : "") + to_string(nextSTId);
-            cout << ">> He thong tu dong cap Ma suat chieu: " << id << endl;
-            cout << "Nhap Ma phim (Chon tu danh sach tren): "; cin >> movieId; 
-            cout << "Nhap Ma phong (VD: ROOM01): "; cin >> roomId;
-            cout << "Nhap Ngay chieu (YYYY-MM-DD): "; cin >> date;
-            cout << "Nhap Gio chieu (HH:MM): "; cin >> time;
-            cout << "Nhap Gia ve co ban: "; cin >> price;
-
-            Showtime newShowtime(id, movieId, roomId, date, time, price);
-            showtimeMgr.add(newShowtime);
-            cout << ">> Them suat chieu thanh cong!" << endl;
-            system("pause");
         }
-        else if (choice == 3) {
-            showTicketHistory(""); 
-            system("pause");
-        }
-    } while (choice != 0);
-}
-
-// Khai bao ten ham chinh xac la thuoc ve class Menu
-void Menu::showTicketHistory(string username) {
-    ifstream file("data/tickets.txt");
-    if (!file.is_open()) {
-        cout << ">> Loi: Khong the mo file lich su dat ve!" << endl;
-        return;
+        cout << right;
+        pause();
     }
-
-    string line;
-    bool found = false;
-    cout << "\n==================== LICH SU DAT VE ====================\n";
-    
-    while (getline(file, line)) {
-        if (username == "" || line.find(username) != string::npos) {
-            cout << line << endl;
-            found = true;
-        }
-    }
-    
-    if (!found) {
-        cout << ">> Chua co lich su dat ve nao!" << endl;
-    }
-    cout << "========================================================\n";
-    file.close();
 }

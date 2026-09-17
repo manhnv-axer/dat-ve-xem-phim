@@ -1,11 +1,19 @@
 #pragma once
 
 #include "../Manager.h"
+#include "../Customer/Customer.h"
+#include "../Staff/Staff.h"
 
 #include <string>
 #include <vector>
 
 using namespace std;
+
+enum class Role {
+    Manager,
+    Staff,
+    Customer
+};
 
 struct Account {
     string id;
@@ -14,47 +22,50 @@ struct Account {
     string role;
     string fullName;
     string phone;
+    string email;
     bool active;
-};
-
-enum class Role {
-    Admin = 0,
-    Staff = 1,
-    Customer = 2
 };
 
 class AccountManager : public Manager<Account> {
 private:
     static string trim(const string& value);
     static vector<string> split(const string& line);
-    static string normalizeRole(const string& role);
-    static bool isBlank(const string& value);
-    void ensureDefaultAdmin();
+    static string normalizeRole(const string& value);
+    static string lower(string value);
+    void ensureDefaultManager();
 
 public:
-    explicit AccountManager(const string& fileName = "data/users.txt");
+    explicit AccountManager(const string& file = "data/users.txt");
 
     bool load() override;
     bool save() const override;
     const Account* findById(const string& id) const override;
-    const vector<Account>& getAccounts() const;
-    static Role getRole(const Account& account);
-    static bool hasRole(const Account& account, Role role);
 
-    const Account* authenticate(const string& username,
-                                const string& password) const;
-    bool registerAccount(const string& username,
-                         const string& password,
-                         const string& fullName,
-                         const string& phone,
-                         string& errorMessage);
-    bool changePassword(const string& userId,
-                        const string& oldPassword,
-                        const string& newPassword,
+    static Role getRole(const Account& account);
+    static bool isManager(const Account& account);
+    static bool isStaff(const Account& account);
+    static bool isCustomer(const Account& account);
+
+    const Account* authenticate(const string& username, const string& password) const;
+
+    bool registerCustomer(const string& username, const string& password,
+                          const string& fullName, const string& phone,
+                          const string& email, string& errorMessage);
+
+    bool createStaff(const string& username, const string& password,
+                     const string& fullName, const string& phone,
+                     const string& email, string& errorMessage);
+
+    bool setStaffStatus(const string& staffId, bool active, string& errorMessage);
+    vector<Account> getStaff() const;
+    vector<Account> searchCustomers(const string& keyword) const;
+    vector<Account> getCustomers() const;
+    bool updateCustomer(const string& id, const string& name,
+                        const string& phone, const string& email,
                         string& errorMessage);
-    bool updateProfile(const string& userId,
-                       const string& fullName,
-                       const string& phone,
-                       string& errorMessage);
-    bool setAccountStatus(const string& userId, bool active);
+    bool deleteCustomer(const string& id, string& errorMessage);
+
+    // Chi chuyen Account thanh doi tuong OOP phu hop voi role.
+    Staff toStaff(const Account& account) const;
+    Customer toCustomer(const Account& account) const;
 };

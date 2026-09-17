@@ -1,0 +1,50 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "type": "cppbuild",
+            "label": "C/C++: g++.exe build Cinema",
+            "command": "C:\\msys64\\ucrt64\\bin\\g++.exe",
+            "args": [
+                "-fdiagnostics-color=always",
+                "-std=c++17",
+                "-Wall",
+                "-Wextra",
+                "-pedantic",
+                "${workspaceFolder}/main.cpp",
+                "${workspaceFolder}/User/User.cpp",
+                "${workspaceFolder}/Staff/Staff.cpp",
+                "${workspaceFolder}/Customer/Customer.cpp",
+                "${workspaceFolder}/Roles/Manager.cpp",
+                "${workspaceFolder}/AccountManager/AccountManager.cpp",
+                "${workspaceFolder}/Movie/Movie.cpp",
+                "${workspaceFolder}/Movie/MovieManager.cpp",
+                "${workspaceFolder}/Showtime/Showtime.cpp",
+                "${workspaceFolder}/Showtime/ShowtimeManager.cpp",
+                "${workspaceFolder}/Room/Seat.cpp",
+                "${workspaceFolder}/Room/CinemaRoom.cpp",
+                "${workspaceFolder}/Room/CinemaRoomManager.cpp",
+                "${workspaceFolder}/Ticket/Ticket.cpp",
+                "${workspaceFolder}/Ticket/StandardTicket.cpp",
+                "${workspaceFolder}/Ticket/VIPTicket.cpp",
+                "${workspaceFolder}/Booking/Booking.cpp",
+                "${workspaceFolder}/Booking/BookingManager.cpp",
+                "${workspaceFolder}/Core/Menu.cpp",
+
+                "-o",
+                "${workspaceFolder}/Main.exe"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "detail": "Build Cinema Management System"
+        }
+    ]
+}

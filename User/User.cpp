@@ -1,14 +1,12 @@
 #include "User.h"
-#include <iostream>
-#include <limits>
 
 using namespace std;
 
 User::User() : id(""), name(""), phone(""), email("") {}
 
-User::User(const string& id, const string& name,
-               const string& phone, const string& email)
-    : id(id), name(name), phone(phone), email(email) {}
+User::User(const string& idValue, const string& nameValue,
+           const string& phoneValue, const string& emailValue)
+    : id(idValue), name(nameValue), phone(phoneValue), email(emailValue) {}
 
 string User::getId() const { return id; }
 string User::getName() const { return name; }
@@ -18,14 +16,3 @@ string User::getEmail() const { return email; }
 void User::setName(const string& value) { name = value; }
 void User::setPhone(const string& value) { phone = value; }
 void User::setEmail(const string& value) { email = value; }
-
-void User::input() {
-    cout << "Nhap ID: ";
-    getline(cin, id);
-    cout << "Nhap ho ten: ";
-    getline(cin, name);
-    cout << "Nhap so dien thoai: ";
-    getline(cin, phone);
-    cout << "Nhap email: ";
-    getline(cin, email);
-}

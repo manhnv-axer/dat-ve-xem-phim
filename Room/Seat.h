@@ -1,20 +1,22 @@
 #pragma once
+
 #include <string>
 
 using namespace std;
 
 class Seat {
 private:
-    string seatId; // VD: "A1", "B2"
-    bool isVIP;    // true nếu là ghế VIP
-    bool isBooked; // true nếu đã đặt
+    string seatId;
+    bool vip;
+    bool maintenance;
 
 public:
-    Seat(string id = "", bool vip = false, bool booked = false);
+    Seat(const string& id = "", bool isVip = false, bool isMaintenance = false);
 
     string getSeatId() const;
-    bool getIsVIP() const;
-    bool getIsBooked() const;
-    
-    void setBooked(bool booked);
+    bool isVIP() const;
+    bool isMaintenance() const;
+
+    void setVIP(bool value);
+    void setMaintenance(bool value);
 };

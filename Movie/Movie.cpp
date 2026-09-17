@@ -1,10 +1,15 @@
 #include "Movie.h"
 
-// Hàm khởi tạo (Constructor)
-Movie::Movie(string id, string t, int d, string g, int age, string s)
-    : movieId(id), title(t), duration(d), genre(g), ageLimit(age), status(s) {}
+#include <iostream>
 
-// Các hàm Getter lấy thông tin
+using namespace std;
+
+Movie::Movie(const string& id, const string& titleValue, int durationValue,
+             const string& genreValue, int ageLimitValue,
+             const string& statusValue)
+    : movieId(id), title(titleValue), duration(durationValue),
+      genre(genreValue), ageLimit(ageLimitValue), status(statusValue) {}
+
 string Movie::getMovieId() const { return movieId; }
 string Movie::getTitle() const { return title; }
 int Movie::getDuration() const { return duration; }
@@ -12,11 +17,16 @@ string Movie::getGenre() const { return genre; }
 int Movie::getAgeLimit() const { return ageLimit; }
 string Movie::getStatus() const { return status; }
 
-// Hàm Setter cập nhật trạng thái
-void Movie::setStatus(string s) { status = s; }
+void Movie::setTitle(const string& value) { title = value; }
+void Movie::setDuration(int value) { duration = value; }
+void Movie::setGenre(const string& value) { genre = value; }
+void Movie::setAgeLimit(int value) { ageLimit = value; }
+void Movie::setStatus(const string& value) { status = value; }
 
-// Hàm in thông tin phim
 void Movie::displayMovieInfo() const {
-    cout << "Phim: " << title << " | The loai: " << genre 
-         << " | Thoi luong: " << duration << " phut | Trang thai: " << status << endl;
+    cout << movieId << " | " << title
+         << " | " << genre
+         << " | " << duration << " phut"
+         << " | P" << ageLimit
+         << " | " << status << '\n';
 }

@@ -1,6 +1,6 @@
 #pragma once
+
 #include <string>
-#include <iostream>
 
 using namespace std;
 
@@ -14,7 +14,9 @@ private:
     string status;
 
 public:
-    Movie(string id = "", string t = "", int d = 0, string g = "", int age = 0, string s = "");
+    Movie(const string& id = "", const string& title = "", int duration = 0,
+          const string& genre = "", int ageLimit = 0,
+          const string& status = "Dang chieu");
 
     string getMovieId() const;
     string getTitle() const;
@@ -23,6 +25,11 @@ public:
     int getAgeLimit() const;
     string getStatus() const;
 
-    void setStatus(string s);
+    void setTitle(const string& value);
+    void setDuration(int value);
+    void setGenre(const string& value);
+    void setAgeLimit(int value);
+    void setStatus(const string& value);
+
     void displayMovieInfo() const;
 };

@@ -1,10 +1,13 @@
 #include "Seat.h"
 
-Seat::Seat(string id, bool vip, bool booked) 
-    : seatId(id), isVIP(vip), isBooked(booked) {}
+using namespace std;
+
+Seat::Seat(const string& id, bool isVip, bool isMaintenanceValue)
+    : seatId(id), vip(isVip), maintenance(isMaintenanceValue) {}
 
 string Seat::getSeatId() const { return seatId; }
-bool Seat::getIsVIP() const { return isVIP; }
-bool Seat::getIsBooked() const { return isBooked; }
+bool Seat::isVIP() const { return vip; }
+bool Seat::isMaintenance() const { return maintenance; }
 
-void Seat::setBooked(bool booked) { isBooked = booked; }
+void Seat::setVIP(bool value) { vip = value; }
+void Seat::setMaintenance(bool value) { maintenance = value; }

@@ -1,43 +1,38 @@
 #pragma once
-#include <string>
+
 #include <iostream>
+#include <memory>
+#include <string>
 
 using namespace std;
 
-// LỚP CHA: Ticket (Trừu tượng)
-class Ticket {
+// Lop co so truu tuong cho cac loai ve.
+class Ticket
+{
 protected:
     string ticketId;
-    double price;
+    string showtimeId;
+    string seatId;
+    double basePrice;
+
 public:
-    Ticket(string id, double p) : ticketId(id), price(p) {}
+    Ticket(
+        const string& id = "",
+        const string& showtime = "",
+        const string& seat = "",
+        double price = 0
+    );
+
     virtual ~Ticket() = default;
-    
-    double getPrice() const { return price; }
-    virtual void displayTicket() const = 0; // Hàm ảo thuần túy bắt buộc lớp con phải viết
-};
 
-// LỚP CON 1: Vé Thường (Kế thừa Ticket)
-class StandardTicket : public Ticket {
-public:
-    StandardTicket(string id, double p) : Ticket(id, p) {}
-    
-    void displayTicket() const override {
-        cout << "[VE THUONG] Ma ve: " << ticketId << " | Gia: " << price << " VND" << endl;
-    }
-};
+    string getTicketId() const;
+    string getShowtimeId() const;
+    string getSeatId() const;
+    double getBasePrice() const;
 
-// LỚP CON 2: Vé VIP (Kế thừa Ticket)
-class VIPTicket : public Ticket {
-private:
-    string extraPerks; // Đặc quyền thêm
-public:
-    // Khởi tạo vé VIP: Giá cơ bản tự động nhân 1.5 lần và có kèm bắp nước
-    VIPTicket(string id, double p, string perks = "Combo Bap Nuoc Mien Phi") 
-        : Ticket(id, p * 1.5), extraPerks(perks) {}
-        
-    void displayTicket() const override {
-        cout << "[VE VIP] Ma ve: " << ticketId << " | Gia: " << price << " VND" << endl;
-        cout << ">> Dac quyen: " << extraPerks << endl;
-    }
+    // Cac ham ao thuan tuy bat buoc lop con phai cai dat.
+    virtual string getType() const = 0;
+    virtual double getPrice() const = 0;
+    virtual unique_ptr<Ticket> clone() const = 0;
+    virtual void displayTicket() const = 0;
 };
