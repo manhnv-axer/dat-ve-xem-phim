@@ -1,54 +1,67 @@
 #pragma once
 
-#include "../AccountManager/AccountManager.h"
-#include "../Booking/BookingManager.h"
-#include "../Movie/MovieManager.h"
-#include "../Room/CinemaRoomManager.h"
-#include "../Showtime/ShowtimeManager.h"
-#include "../Roles/Manager.h"
+#include "../InputHandler/InputHandler.h"
+#include "../../AccountManager/AccountManager.h"
+#include "../../Booking/BookingManager.h"
+#include "../../Movie/MovieManager.h"
+#include "../../Room/CinemaRoomManager.h"
+#include "../../Showtime/ShowtimeManager.h"
+#include "../../Roles/Manager.h"
 
+#include <iostream>
+#include <iomanip>
 #include <string>
 #include <vector>
+#include <iostream>
+#include <iomanip>
+#include <cctype>
 
 using namespace std;
 
-class Menu {
+class Menu
+{
 private:
     AccountManager accountManager;
     MovieManager movieManager;
     ShowtimeManager showtimeManager;
     CinemaRoomManager roomManager;
     BookingManager bookingManager;
+    InputHandler input;
 
     void loginMenu();
-    void openAccountMenu(const Account& account);
-    const Account* loadSession() const;
-    bool saveSession(const Account& account) const;
-    void clearSession() const;
     void customerMenu(const Account& account);
+
     void staffMenu(const Account& account);
+    void staffAccountMenu();
+
     void managerMenu(const Account& account);
+    void customerManagementMenu();
 
     void movieMenu();
     void showtimeMenu();
     void roomMenu();
-    void staffAccountMenu();
-    void customerManagementMenu();
+
     void bookingAtCounter(const Account& operatorAccount);
     void bookingOnline(const Account& customer);
-    void lookupMoviesAndShowtimes();
     void bookingHistory(const string& customerId);
     void cancelBooking(const string& customerId, bool managerOrStaff);
-    void statisticsMenu();
+
     int chooseMovieForBooking();
     int chooseShowtimeForMovie(const string& movieId);
+
+    void lookupMoviesAndShowtimes();
+
+    void statisticsMenu();
 
     void printMovies(const vector<Movie>& movies) const;
     void printShowtimes(const vector<Showtime>& showtimes) const;
     void printRooms() const;
+
     void pause() const;
+    string upper(string value) const;
+    string trimSeatInput(string value) const;
+    string roleText(Role role) const;
 
 public:
-    Menu() = default;
     void run();
 };
