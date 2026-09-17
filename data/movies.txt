@@ -1,5 +1,5 @@
 M01|Avenger: End Game|Hanh dong|180|13|Dang chieu
-M02|Mat Biec|Tinh cam|120|16|Dang chieu
+M02|Mac Biecc|Tinh Cum|200|13|Dang chieu
 M03|Fast and Furious 10|Hanh dong|140|13|Dang chieu
 M04|Doraemon|Hoat hinh|100|0|Dang chieu
 M05|Godzilla vs Kong|Vien tuong|130|13|Dang chieu
