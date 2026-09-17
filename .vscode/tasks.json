@@ -4,7 +4,7 @@
         {
             "type": "cppbuild",
             "label": "C/C++: g++.exe build Cinema",
-            "command": "C:\\mingw64\\bin\\g++.exe",
+            "command": "C:\\msys64\\ucrt64\\bin\\g++.exe",
             "args": [
                 "-std=c++17",
                 "-fdiagnostics-color=always",
@@ -15,7 +15,6 @@
                 "${workspaceFolder}/AccountManager/AccountManager.cpp",
                 "${workspaceFolder}/Booking/Booking.cpp",
                 "${workspaceFolder}/Booking/BookingManager.cpp",
-                "${workspaceFolder}/Core/Menu.cpp",
                 "${workspaceFolder}/Customer/Customer.cpp",
                 "${workspaceFolder}/Movie/Movie.cpp",
                 "${workspaceFolder}/Movie/MovieManager.cpp",
@@ -30,6 +29,16 @@
                 "${workspaceFolder}/Ticket/Ticket.cpp",
                 "${workspaceFolder}/Ticket/VIPTicket.cpp",
                 "${workspaceFolder}/User/User.cpp",
+                "${workspaceFolder}/Core/Menu/Menu.cpp",
+                "${workspaceFolder}/Core/Menu/MenuAuth.cpp",
+                "${workspaceFolder}/Core/Menu/MenuCustomer.cpp",
+                "${workspaceFolder}/Core/Menu/MenuStaff.cpp",
+                "${workspaceFolder}/Core/Menu/MenuManager.cpp",
+                "${workspaceFolder}/Core/Menu/MenuMovie.cpp",
+                "${workspaceFolder}/Core/Menu/MenuShowtime.cpp",
+                "${workspaceFolder}/Core/Menu/MenuRoom.cpp",
+                "${workspaceFolder}/Core/Menu/MenuBooking.cpp",
+                "${workspaceFolder}/Core/Menu/MenuStatistics.cpp",
                 "${workspaceFolder}/main.cpp",
                 "-o",
                 "${workspaceFolder}/Main.exe"
