@@ -413,10 +413,26 @@ void Menu::roomMenu() {
             if (choice == 5) roomManager.setSeatMaintenance(roomId, seatId, true, error);
             if (choice == 6) roomManager.setSeatMaintenance(roomId, seatId, false, error);
         } else if (choice == 7) {
-            const string roomId = InputHandler::getLine("Ma phong: ");
-            const CinemaRoom* room = roomManager.findById(roomId);
-            if (room != nullptr) room->displaySeatLayout();
-            else error = "Khong tim thay phong.";
+            // Khi xem so do, hien danh sach phong truoc de nguoi dung chon
+            // bang so thu tu, sau do moi hien so do ghe cua phong da chon.
+            printRooms();
+
+            const vector<CinemaRoom>& rooms = roomManager.getItems();
+            if (rooms.empty()) {
+                error = "Chua co phong nao.";
+            } else {
+                const int roomIndex = InputHandler::getInt(
+                    "Chon phong (Nhap so): ", 0, static_cast<int>(rooms.size()));
+
+                if (roomIndex == 0) {
+                    cout << "Da huy xem so do.\n";
+                } else {
+                    const CinemaRoom& room = rooms[roomIndex - 1];
+                    cout << "\n>> Ban da chon phong: " << room.getRoomId()
+                         << " - " << room.getRoomName() << "\n";
+                    room.displaySeatLayout();
+                }
+            }
         } else if (choice == 8) {
             printRooms();
             roomManager.deleteRoom(InputHandler::getLine("Ma phong: "), error);
@@ -424,9 +440,11 @@ void Menu::roomMenu() {
 
         if (!error.empty()) {
             cout << "Loi: " << error << '\n';
-        } else {
+        } else if (choice != 7 || error.empty()) {
             cout << "Thuc hien thanh cong.\n";
-            printRooms();
+            if (choice != 7) {
+                printRooms();
+            }
         }
         pause();
     }

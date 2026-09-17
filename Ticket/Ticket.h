@@ -7,6 +7,7 @@
 using namespace std;
 
 // Lop co so truu tuong cho cac loai ve.
+// Day la abstract class thu hai cua he thong.
 class Ticket
 {
 protected:

@@ -1,4 +1,6 @@
 #include "BookingManager.h"
+#include "../Ticket/StandardTicket.h"
+#include "../Ticket/VIPTicket.h"
 
 #include <algorithm>
 #include <chrono>

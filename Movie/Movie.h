@@ -1,5 +1,6 @@
 #pragma once
 
+#include <iostream>
 #include <string>
 
 using namespace std;
@@ -32,4 +33,7 @@ public:
     void setStatus(const string& value);
 
     void displayMovieInfo() const;
+
+    // Qua tai toan tu << de in thong tin phim truc tiep.
+    friend ostream& operator<<(ostream& os, const Movie& movie);
 };

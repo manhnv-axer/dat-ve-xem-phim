@@ -11,3 +11,9 @@ bool Seat::isMaintenance() const { return maintenance; }
 
 void Seat::setVIP(bool value) { vip = value; }
 void Seat::setMaintenance(bool value) { maintenance = value; }
+
+
+bool Seat::operator==(const Seat& other) const
+{
+    return seatId == other.seatId;
+}

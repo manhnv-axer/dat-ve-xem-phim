@@ -30,3 +30,13 @@ void Movie::displayMovieInfo() const {
          << " | P" << ageLimit
          << " | " << status << '\n';
 }
+
+
+ostream& operator<<(ostream& os, const Movie& movie)
+{
+    os << movie.getMovieId() << " | "
+       << movie.getTitle() << " | The loai: "
+       << movie.getGenre() << " | "
+       << movie.getDuration() << " phut";
+    return os;
+}

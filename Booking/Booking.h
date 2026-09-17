@@ -1,8 +1,6 @@
 #pragma once
 
 #include "../Ticket/Ticket.h"
-#include "../Ticket/StandardTicket.h"
-#include "../Ticket/VIPTicket.h"
 #include <memory>
 #include <string>
 #include <vector>

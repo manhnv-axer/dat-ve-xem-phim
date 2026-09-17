@@ -19,4 +19,7 @@ public:
 
     void setVIP(bool value);
     void setMaintenance(bool value);
+
+    // Qua tai tu de so sanh hai ghe theo ma ghe.
+    bool operator==(const Seat& other) const;
 };

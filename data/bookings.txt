@@ -1,2 +1,0 @@
-BookingId|CustomerId|ShowtimeId|StaffId|Status|CreatedAt|Tickets|Total
-B0001|C01|ST06||PAID|2026-09-17 07:23:12|B0001-T01,A0,Standard,90000|90000
