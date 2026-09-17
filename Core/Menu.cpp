@@ -116,8 +116,11 @@ void Menu::loginMenu() {
                 username = InputHandler::getLine("Username: ");
                 if (!AccountManager::validUsername(username)) {
                     cout << "Loi: Username phai dai 3-20 ky tu, chi gom chu, so va dau _.\n";
+                } else if (accountManager.usernameExists(username)) {
+                    cout << "Loi: Username da ton tai. Vui long chon username khac.\n";
                 }
-            } while (!AccountManager::validUsername(username));
+            } while (!AccountManager::validUsername(username) ||
+                     accountManager.usernameExists(username));
 
             string password;
             do {
@@ -167,6 +170,10 @@ void Menu::loginMenu() {
             const string username = InputHandler::getLine("Username: ");
             if (!AccountManager::validUsername(username)) {
                 cout << "Loi: Username khong duoc de trong, dai 3-20 ky tu, chi gom chu, so va dau _.\n";
+                continue;
+            }
+            if (!accountManager.usernameExists(username)) {
+                cout << "Loi: Username khong ton tai trong he thong. Vui long nhap lai.\n";
                 continue;
             }
             const string password = InputHandler::getPassword("Password: ");
@@ -298,8 +305,11 @@ void Menu::staffAccountMenu() {
                 username = InputHandler::getLine("Username: ");
                 if (!AccountManager::validUsername(username)) {
                     cout << "Loi: Username phai dai 3-20 ky tu, chi gom chu, so va dau _.\n";
+                } else if (accountManager.usernameExists(username)) {
+                    cout << "Loi: Username da ton tai. Vui long chon username khac.\n";
                 }
-            } while (!AccountManager::validUsername(username));
+            } while (!AccountManager::validUsername(username) ||
+                     accountManager.usernameExists(username));
 
             string password;
             do {

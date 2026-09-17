@@ -64,6 +64,13 @@ bool AccountManager::validEmail(const string& value) {
            dot + 1 < value.size() && value.find('@', at + 1) == string::npos;
 }
 
+bool AccountManager::usernameExists(const string& username) const {
+    const string normalizedUsername = lower(trim(username));
+    return any_of(items.begin(), items.end(), [&](const Account& account) {
+        return lower(account.username) == normalizedUsername;
+    });
+}
+
 string AccountManager::normalizeRole(const string& value) {
     const string role = lower(trim(value));
     if (role == "admin" || role == "manager" || role == "quanly") {
