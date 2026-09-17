@@ -682,7 +682,29 @@ string trimSeatInput(string value) {
 
 void Menu::bookingAtCounter(const Account& operatorAccount) {
     InputHandler::clearScreen();
-    const string customerId = InputHandler::getLine("Customer ID: ");
+
+    cout << "\n================ BAN VE TAI QUAY ================\n";
+    cout << "Quy trinh: chon Customer -> chon phim -> chon suat chieu -> chon ghe.\n";
+    cout << "Nhap Customer ID tu danh sach ben duoi.\n\n";
+    cout << left << setw(12) << "CUSTOMER ID"
+         << setw(20) << "USERNAME"
+         << setw(28) << "HO TEN"
+         << setw(16) << "SDT" << "EMAIL\n";
+    cout << string(90, '-') << '\n';
+    for (const Account& customer : accountManager.getCustomers()) {
+        cout << left << setw(12) << customer.id
+             << setw(20) << customer.username
+             << setw(28) << customer.fullName.substr(0, 27)
+             << setw(16) << customer.phone << customer.email << '\n';
+    }
+    if (accountManager.getCustomers().empty()) {
+        cout << "Chua co Customer nao.\n";
+        pause();
+        return;
+    }
+    cout << string(90, '-') << '\n';
+
+    const string customerId = upper(InputHandler::getLine("Nhap Customer ID: "));
     const Account* customer = accountManager.findById(customerId);
     if (customer == nullptr || !AccountManager::isCustomer(*customer)) {
         cout << "Customer khong ton tai.\n";
