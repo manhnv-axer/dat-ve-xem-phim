@@ -4,3 +4,5 @@ S01|staff01|staff123|Staff|Nguyen Van Staff|0900000001|staff@cinema.local|Active
 C01|customer01|customer123|Customer|Nguyen Van Customer|0900000002|customer01@cinema.local|Active
 C02|customer02|customer123|Customer|Tran Thi Customer|0900000003|customer02@cinema.local|Active
 C3|tantruc|1q2w3e4r5t|Customer|Tan Truc|0912345678|truc@gmail.com|Active
+C4|tanne|1q2w3e4r5t|Customer|Trn tr|0912345678|tn@gmail.com|Active
+C5|1q2w|1q2w3e4r5t|Customer|1q2w|0912345678|truc@trucgmail.com|Active

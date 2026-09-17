@@ -111,40 +111,73 @@ void Menu::loginMenu() {
         }
 
         if (choice == 2) {
-            const string username = InputHandler::getLine("Username: ");
-            const string password = InputHandler::getPassword("Password: ");
-            const string confirmPassword = InputHandler::getPassword("Nhap lai Password: ");
-            if (password != confirmPassword) {
-                cout << "Loi: Password nhap lai khong khop.\n";
-                pause();
-                continue;
-            }
+            string username;
+            do {
+                username = InputHandler::getLine("Username: ");
+                if (!AccountManager::validUsername(username)) {
+                    cout << "Loi: Username phai dai 3-20 ky tu, chi gom chu, so va dau _.\n";
+                }
+            } while (!AccountManager::validUsername(username));
+
+            string password;
+            do {
+                password = InputHandler::getPassword("Password: ");
+                if (!AccountManager::validPassword(password)) {
+                    cout << "Loi: Password phai co it nhat 6 ky tu.\n";
+                }
+            } while (!AccountManager::validPassword(password));
+
+            string confirmPassword;
+            do {
+                confirmPassword = InputHandler::getPassword("Nhap lai Password: ");
+                if (password != confirmPassword) {
+                    cout << "Loi: Password nhap lai khong khop.\n";
+                }
+            } while (password != confirmPassword);
+
             const string name = InputHandler::getLine("Ho ten: ");
-            const string phone = InputHandler::getLine("So dien thoai: ");
-            const string email = InputHandler::getLine("Email: ");
+            string phone;
+            do {
+                phone = InputHandler::getLine("So dien thoai: ");
+                if (!AccountManager::validPhone(phone)) {
+                    cout << "Loi: So dien thoai phai gom 10 hoac 11 chu so va bat dau bang 0.\n";
+                }
+            } while (!AccountManager::validPhone(phone));
+
+            string email;
+            do {
+                email = InputHandler::getLine("Email: ");
+                if (!AccountManager::validEmail(email)) {
+                    cout << "Loi: Email khong dung dinh dang.\n";
+                }
+            } while (!AccountManager::validEmail(email));
             string error;
             if (accountManager.registerCustomer(username, password, name, phone, email, error)) {
-                cout << "Dang ky Customer thanh cong.\n";
+                cout << "Dang ky Customer thanh cong. Vui long dang nhap.\n";
+                pause();
             } else {
                 cout << "Loi: " << error << '\n';
+                pause();
             }
-            pause();
             continue;
         }
 
-        const string username = InputHandler::getLine("Username: ");
-        const string password = InputHandler::getPassword("Password: ");
-        const Account* account = accountManager.authenticate(username, password);
+        const Account* account = nullptr;
+        while (account == nullptr) {
+            const string username = InputHandler::getLine("Username: ");
+            if (!AccountManager::validUsername(username)) {
+                cout << "Loi: Username khong duoc de trong, dai 3-20 ky tu, chi gom chu, so va dau _.\n";
+                continue;
+            }
+            const string password = InputHandler::getPassword("Password: ");
+            account = accountManager.authenticate(username, password);
 
-        if (account == nullptr) {
-            cout << "Sai username/password.\n";
-            pause();
-            continue;
-        }
-        if (!account->active) {
-            cout << "Tai khoan dang bi khoa.\n";
-            pause();
-            continue;
+            if (account == nullptr) {
+                cout << "Sai username/password. Vui long nhap lai.\n";
+            } else if (!account->active) {
+                cout << "Tai khoan dang bi khoa. Vui long nhap lai.\n";
+                account = nullptr;
+            }
         }
 
         cout << "Dang nhap thanh cong: " << account->fullName
@@ -260,17 +293,46 @@ void Menu::staffAccountMenu() {
 
         if (choice == 1) {
             string error;
-            const string username = InputHandler::getLine("Username: ");
-            const string password = InputHandler::getPassword("Password: ");
-            const string confirmPassword = InputHandler::getPassword("Nhap lai Password: ");
-            if (password != confirmPassword) {
-                cout << "Loi: Password nhap lai khong khop.\n";
-                pause();
-                continue;
-            }
+            string username;
+            do {
+                username = InputHandler::getLine("Username: ");
+                if (!AccountManager::validUsername(username)) {
+                    cout << "Loi: Username phai dai 3-20 ky tu, chi gom chu, so va dau _.\n";
+                }
+            } while (!AccountManager::validUsername(username));
+
+            string password;
+            do {
+                password = InputHandler::getPassword("Password: ");
+                if (!AccountManager::validPassword(password)) {
+                    cout << "Loi: Password phai co it nhat 6 ky tu.\n";
+                }
+            } while (!AccountManager::validPassword(password));
+
+            string confirmPassword;
+            do {
+                confirmPassword = InputHandler::getPassword("Nhap lai Password: ");
+                if (password != confirmPassword) {
+                    cout << "Loi: Password nhap lai khong khop.\n";
+                }
+            } while (password != confirmPassword);
+
             const string name = InputHandler::getLine("Ho ten: ");
-            const string phone = InputHandler::getLine("SDT: ");
-            const string email = InputHandler::getLine("Email: ");
+            string phone;
+            do {
+                phone = InputHandler::getLine("SDT: ");
+                if (!AccountManager::validPhone(phone)) {
+                    cout << "Loi: So dien thoai phai gom 10 hoac 11 chu so va bat dau bang 0.\n";
+                }
+            } while (!AccountManager::validPhone(phone));
+
+            string email;
+            do {
+                email = InputHandler::getLine("Email: ");
+                if (!AccountManager::validEmail(email)) {
+                    cout << "Loi: Email khong dung dinh dang.\n";
+                }
+            } while (!AccountManager::validEmail(email));
             if (accountManager.createStaff(username, password, name, phone, email, error)) {
                 cout << "Tao Staff thanh cong.\n";
             } else {

@@ -36,6 +36,34 @@ string AccountManager::lower(string value) {
     return value;
 }
 
+bool AccountManager::validUsername(const string& value) {
+    if (value.size() < 3 || value.size() > 20) {
+        return false;
+    }
+    return all_of(value.begin(), value.end(), [](unsigned char character) {
+        return isalnum(character) || character == '_';
+    });
+}
+
+bool AccountManager::validPassword(const string& value) {
+    return value.size() >= 6;
+}
+
+bool AccountManager::validPhone(const string& value) {
+    return (value.size() == 10 || value.size() == 11) &&
+           value.front() == '0' &&
+           all_of(value.begin(), value.end(), [](unsigned char character) {
+               return isdigit(character);
+           });
+}
+
+bool AccountManager::validEmail(const string& value) {
+    const size_t at = value.find('@');
+    const size_t dot = value.find('.', at == string::npos ? 0 : at + 1);
+    return at > 0 && at != string::npos && dot != string::npos &&
+           dot + 1 < value.size() && value.find('@', at + 1) == string::npos;
+}
+
 string AccountManager::normalizeRole(const string& value) {
     const string role = lower(trim(value));
     if (role == "admin" || role == "manager" || role == "quanly") {
@@ -154,8 +182,10 @@ bool AccountManager::isCustomer(const Account& account) {
 
 const Account* AccountManager::authenticate(const string& username,
                                              const string& password) const {
+    const string normalizedUsername = lower(trim(username));
     for (const Account& account : items) {
-        if (account.username == username && account.password == password) {
+        if (lower(account.username) == normalizedUsername &&
+            account.password == password) {
             return &account;
         }
     }
@@ -168,13 +198,33 @@ bool AccountManager::registerCustomer(const string& username,
                                       const string& phone,
                                       const string& email,
                                       string& errorMessage) {
-    if (username.empty() || password.empty() || fullName.empty() || phone.empty()) {
-        errorMessage = "Thong tin bat buoc khong duoc de trong.";
+    const string normalizedUsername = trim(username);
+    const string normalizedName = trim(fullName);
+    const string normalizedPhone = trim(phone);
+    const string normalizedEmail = trim(email);
+    if (!validUsername(normalizedUsername)) {
+        errorMessage = "Username phai dai 3-20 ky tu, chi gom chu, so va dau _.";
+        return false;
+    }
+    if (!validPassword(password)) {
+        errorMessage = "Password phai co it nhat 6 ky tu.";
+        return false;
+    }
+    if (normalizedName.empty()) {
+        errorMessage = "Ho ten khong duoc de trong.";
+        return false;
+    }
+    if (!validPhone(normalizedPhone)) {
+        errorMessage = "So dien thoai phai gom 10 hoac 11 chu so.";
+        return false;
+    }
+    if (!validEmail(normalizedEmail)) {
+        errorMessage = "Email khong dung dinh dang.";
         return false;
     }
 
     for (const Account& account : items) {
-        if (account.username == username) {
+        if (lower(account.username) == lower(normalizedUsername)) {
             errorMessage = "Username da ton tai.";
             return false;
         }
@@ -190,8 +240,8 @@ bool AccountManager::registerCustomer(const string& username,
         }
     }
 
-    items.push_back({"C" + to_string(maxNumber + 1), username, password,
-                     "Customer", fullName, phone, email, true});
+    items.push_back({"C" + to_string(maxNumber + 1), normalizedUsername, password,
+                     "Customer", normalizedName, normalizedPhone, normalizedEmail, true});
 
     if (!save()) {
         items.pop_back();
@@ -207,13 +257,33 @@ bool AccountManager::createStaff(const string& username,
                                   const string& phone,
                                   const string& email,
                                   string& errorMessage) {
-    if (username.empty() || password.empty() || fullName.empty() || phone.empty()) {
-        errorMessage = "Thong tin Staff khong duoc de trong.";
+    const string normalizedUsername = trim(username);
+    const string normalizedName = trim(fullName);
+    const string normalizedPhone = trim(phone);
+    const string normalizedEmail = trim(email);
+    if (!validUsername(normalizedUsername)) {
+        errorMessage = "Username phai dai 3-20 ky tu, chi gom chu, so va dau _.";
+        return false;
+    }
+    if (!validPassword(password)) {
+        errorMessage = "Password phai co it nhat 6 ky tu.";
+        return false;
+    }
+    if (normalizedName.empty()) {
+        errorMessage = "Ho ten khong duoc de trong.";
+        return false;
+    }
+    if (!validPhone(normalizedPhone)) {
+        errorMessage = "So dien thoai phai gom 10 hoac 11 chu so.";
+        return false;
+    }
+    if (!validEmail(normalizedEmail)) {
+        errorMessage = "Email khong dung dinh dang.";
         return false;
     }
 
     for (const Account& account : items) {
-        if (account.username == username) {
+        if (lower(account.username) == lower(normalizedUsername)) {
             errorMessage = "Username da ton tai.";
             return false;
         }
@@ -229,8 +299,8 @@ bool AccountManager::createStaff(const string& username,
         }
     }
 
-    items.push_back({"S" + to_string(maxNumber + 1), username, password,
-                     "Staff", fullName, phone, email, true});
+    items.push_back({"S" + to_string(maxNumber + 1), normalizedUsername, password,
+                     "Staff", normalizedName, normalizedPhone, normalizedEmail, true});
 
     if (!save()) {
         items.pop_back();
